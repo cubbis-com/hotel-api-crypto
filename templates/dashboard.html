@@ -1,0 +1,2214 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ hotel_name }} - Front Office & AI Manager</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.6);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(51, 65, 85, 0.8);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(71, 85, 105, 1);
+    }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 font-sans min-h-screen flex flex-col">
+
+  <!-- Header -->
+  <header class="bg-slate-800/90 backdrop-blur border-b border-slate-700 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <span class="text-2xl">🏨</span>
+        <div>
+          <h1 class="font-bold text-lg text-white leading-tight">{{ hotel_name }}</h1>
+          <p class="text-xs text-blue-400 font-mono">OPERA PMS Standard • Garda AI Engine</p>
+        </div>
+      </div>
+      <div class="flex items-center space-x-3">
+        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-sm">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 mr-1.5 animate-pulse"></span>
+          Gateway Online
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Navigation Tabs -->
+  <div class="bg-slate-800 border-b border-slate-700">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex space-x-4 overflow-x-auto">
+      <button onclick="switchTab('monitoring')" id="tab-monitoring" class="tab-btn py-3 border-b-2 border-blue-500 text-blue-400 font-medium text-sm flex items-center space-x-2 whitespace-nowrap transition">
+        <span class="relative flex h-2 w-2">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+        </span>
+        <i class="fa-solid fa-satellite-dish text-emerald-400"></i>
+        <span>Live Log & Chat Monitor</span>
+        <span class="px-1.5 py-0.5 bg-emerald-500/10 text-emerald-300 text-[10px] font-mono rounded border border-emerald-500/20">REALTIME</span>
+      </button>
+
+      <button onclick="switchTab('inquiries')" id="tab-inquiries" class="tab-btn py-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 font-medium text-sm flex items-center space-x-2 whitespace-nowrap transition">
+        <i class="fa-solid fa-list-check"></i>
+        <span>Draft Reservasi FO</span>
+      </button>
+
+      <!-- TAB UTAMA: LOGGER TRANSAKSI WA & TRIPAY (.TXT AUDIT TRAIL) -->
+      <button onclick="switchTab('logger')" id="tab-logger" class="tab-btn py-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 font-medium text-sm flex items-center space-x-2 whitespace-nowrap transition">
+        <i class="fa-solid fa-file-waveform text-amber-400"></i>
+        <span>Logger WA &amp; TriPay</span>
+        <span class="px-1.5 py-0.5 bg-amber-500/10 text-amber-300 text-[10px] font-mono rounded border border-amber-500/20">TXT LOG</span>
+      </button>
+
+      <!-- TAB UTAMA: CRYPTO & SECURITY (SECUREPAY ON-CHAIN) -->
+      <button onclick="switchTab('crypto')" id="tab-crypto" class="tab-btn py-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 font-medium text-sm flex items-center space-x-2 whitespace-nowrap transition">
+        <i class="fa-solid fa-shield-halved text-amber-400"></i>
+        <span>🔐 Crypto &amp; Security</span>
+        <span class="px-1.5 py-0.5 bg-amber-500/10 text-amber-300 text-[10px] font-mono rounded border border-amber-500/20">WEB3 BSC</span>
+      </button>
+
+      <!-- TAB DISEMBUNYIKAN (HIDDEN SESUAI PERMINTAAN USER) -->
+      <button onclick="switchTab('settings')" id="tab-settings" class="tab-btn hidden" style="display: none !important;">
+        <i class="fa-brands fa-whatsapp"></i>
+        <span>Konfigurasi WhatsApp Gateway</span>
+      </button>
+
+      <button onclick="switchTab('simulator')" id="tab-simulator" class="tab-btn hidden" style="display: none !important;">
+        <i class="fa-solid fa-robot"></i>
+        <span>Simulasi Chat Tamu</span>
+      </button>
+
+      <button onclick="switchTab('catalog')" id="tab-catalog" class="tab-btn hidden" style="display: none !important;">
+        <i class="fa-solid fa-bed"></i>
+        <span>Katalog Kamar OPERA</span>
+      </button>
+
+      <button onclick="switchTab('tenant')" id="tab-tenant" class="tab-btn hidden" style="display: none !important;">
+        <i class="fa-solid fa-hotel text-amber-400"></i>
+        <span>Status Tenant &amp; Skema</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Container -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+    <!-- Toast Notification -->
+    <div id="toast" class="hidden fixed bottom-5 right-5 bg-blue-600 text-white px-4 py-2.5 rounded-lg shadow-xl text-sm transition-all z-50 flex items-center space-x-2">
+      <i class="fa-solid fa-circle-check"></i>
+      <span id="toast-msg">Notifikasi</span>
+    </div>
+
+    <!-- TAB 1: LIVE LOG & REALTIME CHAT MONITOR -->
+    <section id="panel-monitoring" class="tab-panel">
+      <!-- Header & Auto Refresh Controls -->
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-700/80">
+        <div>
+          <div class="flex items-center space-x-2">
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5 animate-pulse"></span>
+              STREAM READY
+            </span>
+            <h2 class="text-xl font-bold text-white tracking-tight">Monitoring Log & Percakapan Realtime</h2>
+          </div>
+          <p class="text-xs text-slate-400 mt-1">Pantau seluruh pesan masuk WhatsApp tamu, balasan otomatis Garda AI, serta log payload webhook secara live.</p>
+        </div>
+
+        <div class="flex items-center space-x-3 text-xs">
+          <!-- Auto Refresh Toggle -->
+          <label class="flex items-center space-x-2 bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-lg cursor-pointer hover:border-slate-600 transition select-none">
+            <input type="checkbox" id="auto-refresh-toggle" checked onchange="toggleAutoRefresh(this.checked)" class="rounded bg-slate-900 border-slate-700 text-blue-600 focus:ring-blue-500 w-3.5 h-3.5">
+            <span class="text-slate-300 font-medium">Auto-Refresh (3 dtk)</span>
+            <span id="refresh-indicator" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          </label>
+
+          <!-- Manual Refresh Button -->
+          <button onclick="fetchLiveLogs(true)" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-lg flex items-center space-x-1.5 transition">
+            <i id="refresh-icon" class="fa-solid fa-arrows-rotate"></i>
+            <span>Refresh</span>
+          </button>
+          
+          <span id="last-updated-text" class="text-slate-400 font-mono text-[11px]"></span>
+        </div>
+      </div>
+
+      <!-- KPI Stat Cards -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div class="bg-slate-800/90 border border-slate-700 rounded-xl p-4 flex items-center justify-between shadow-sm">
+          <div>
+            <p class="text-[11px] text-slate-400 uppercase font-semibold">Total Webhook Event</p>
+            <h3 id="stat-total-webhooks" class="text-2xl font-black text-white mt-1">0</h3>
+            <span class="text-[10px] text-emerald-400 font-medium">Recorded in DB</span>
+          </div>
+          <div class="w-10 h-10 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 text-lg">
+            <i class="fa-solid fa-satellite-dish"></i>
+          </div>
+        </div>
+
+        <div class="bg-slate-800/90 border border-slate-700 rounded-xl p-4 flex items-center justify-between shadow-sm">
+          <div>
+            <p class="text-[11px] text-slate-400 uppercase font-semibold">Calon Tamu Aktif</p>
+            <h3 id="stat-total-inquiries" class="text-2xl font-black text-white mt-1">0</h3>
+            <span class="text-[10px] text-blue-400 font-medium">Tanya ketersediaan</span>
+          </div>
+          <div class="w-10 h-10 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 text-lg">
+            <i class="fa-solid fa-users"></i>
+          </div>
+        </div>
+
+        <div class="bg-slate-800/90 border border-slate-700 rounded-xl p-4 flex items-center justify-between shadow-sm">
+          <div>
+            <p class="text-[11px] text-slate-400 uppercase font-semibold">Pesan Obrolan</p>
+            <h3 id="stat-total-chats" class="text-2xl font-black text-white mt-1">0</h3>
+            <span class="text-[10px] text-purple-400 font-medium">Tersimpan di history</span>
+          </div>
+          <div class="w-10 h-10 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 text-lg">
+            <i class="fa-solid fa-comments"></i>
+          </div>
+        </div>
+
+        <div class="bg-slate-800/90 border border-slate-700 rounded-xl p-4 flex flex-col justify-between shadow-sm">
+          <div>
+            <p class="text-[11px] text-slate-400 uppercase font-semibold">Endpoint Webhook Live</p>
+            <p class="text-xs font-mono text-emerald-400 mt-1 truncate" title="{{ settings.public_webhook_url }}">{{ settings.public_webhook_url }}</p>
+          </div>
+          <div class="mt-2 flex items-center justify-between">
+            <span class="text-[10px] text-slate-400">Status: <span class="text-emerald-400 font-semibold">Listening</span></span>
+            <button onclick="navigator.clipboard.writeText('{{ settings.public_webhook_url }}'); showToast('URL Webhook disalin!');" class="text-[11px] text-blue-400 hover:text-blue-300">
+              <i class="fa-regular fa-copy"></i> Salin URL
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Split Layout: Left Guest Threads, Right Detailed Inspector -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- LEFT: Guest Thread List (4 cols) -->
+        <div class="lg:col-span-4 flex flex-col bg-slate-800 border border-slate-700 rounded-xl overflow-hidden shadow-sm h-[680px]">
+          <!-- Header search & filter -->
+          <div class="p-3 border-b border-slate-700 bg-slate-850">
+            <div class="relative">
+              <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-xs text-slate-400"></i>
+              <input type="text" id="guest-search" oninput="filterGuestList()" placeholder="Cari nomor atau nama tamu..." class="w-full bg-slate-900 border border-slate-700 rounded-lg pl-8 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500">
+            </div>
+            <div class="flex items-center space-x-1.5 mt-2 text-[11px]">
+              <button onclick="setGuestFilter('all')" id="filter-all" class="guest-filter-btn px-2.5 py-0.5 rounded bg-blue-600 text-white font-medium">Semua</button>
+              <button onclick="setGuestFilter('draft')" id="filter-draft" class="guest-filter-btn px-2.5 py-0.5 rounded bg-slate-700 text-slate-300 hover:text-white">Draft Siap</button>
+              <button onclick="setGuestFilter('chatting')" id="filter-chatting" class="guest-filter-btn px-2.5 py-0.5 rounded bg-slate-700 text-slate-300 hover:text-white">Sedang Chat</button>
+            </div>
+          </div>
+
+          <!-- Guests List Scrollable -->
+          <div id="guest-list-container" class="flex-1 overflow-y-auto divide-y divide-slate-700/60">
+            <div class="p-8 text-center text-xs text-slate-500">Memuat riwayat tamu...</div>
+          </div>
+
+          <!-- Footer Info -->
+          <div class="p-2.5 border-t border-slate-700 bg-slate-900/50 text-[11px] text-slate-400 flex items-center justify-between">
+            <span id="guest-count-label">0 calon tamu</span>
+            <span class="text-[10px] text-slate-500">Klik tamu untuk melihat percakapan</span>
+          </div>
+        </div>
+
+        <!-- RIGHT: View Tabs (Chat Thread vs Raw Webhook Logs) (8 cols) -->
+        <div class="lg:col-span-8 flex flex-col bg-slate-800 border border-slate-700 rounded-xl overflow-hidden shadow-sm h-[680px]">
+          
+          <!-- Sub-header switcher -->
+          <div class="px-4 py-2.5 border-b border-slate-700 bg-slate-850 flex items-center justify-between">
+            <div class="flex space-x-2">
+              <button onclick="switchMonitoringView('chat')" id="mon-view-chat-btn" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 text-white flex items-center space-x-1.5 transition">
+                <i class="fa-regular fa-comments"></i>
+                <span>Percakapan Tamu (Live Chat)</span>
+              </button>
+              <button onclick="switchMonitoringView('terminal')" id="mon-view-terminal-btn" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-700 text-slate-300 hover:text-white flex items-center space-x-1.5 transition">
+                <i class="fa-solid fa-terminal"></i>
+                <span>Raw Webhook Event Log</span>
+              </button>
+            </div>
+
+            <div id="chat-header-actions" class="hidden items-center space-x-2 text-xs">
+              <span id="selected-guest-status" class="px-2 py-0.5 rounded text-[10px] font-semibold bg-blue-500/20 text-blue-400 border border-blue-500/30">AKTIF</span>
+            </div>
+          </div>
+
+          <!-- VIEW A: LIVE CHAT THREAD -->
+          <div id="mon-chat-view" class="flex-1 flex flex-col overflow-hidden">
+            <!-- Selected Guest Info Bar -->
+            <div id="chat-guest-bar" class="p-3 bg-slate-900/80 border-b border-slate-700 flex items-center justify-between text-xs">
+              <div class="flex items-center space-x-3">
+                <div id="chat-guest-avatar" class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center font-bold text-white text-sm">
+                  💬
+                </div>
+                <div>
+                  <h4 id="chat-guest-name" class="font-bold text-white">Pilih Calon Tamu</h4>
+                  <p id="chat-guest-phone" class="text-slate-400 font-mono text-[11px]">Silakan pilih nomor di daftar kiri</p>
+                </div>
+              </div>
+              <div id="chat-draft-badge-container"></div>
+            </div>
+
+            <!-- Draft Recap Banner (Collapsible if present) -->
+            <div id="chat-recap-banner" class="hidden bg-amber-950/40 border-b border-amber-800/50 p-3 text-xs">
+              <div class="flex items-center justify-between mb-1.5">
+                <span class="font-bold text-amber-300 flex items-center space-x-1.5">
+                  <i class="fa-solid fa-file-invoice"></i>
+                  <span>Draft Rekap Reservasi Tamu (Garda AI)</span>
+                </span>
+                <span class="text-[10px] text-amber-400/80">Siap Ditindaklanjuti Front Office</span>
+              </div>
+              <pre id="chat-recap-text" class="font-mono text-[11px] text-amber-200/90 whitespace-pre-wrap bg-slate-950/70 p-2.5 rounded border border-amber-900/40 max-h-32 overflow-y-auto"></pre>
+            </div>
+
+            <!-- Chat Messages Bubble Box -->
+            <div id="mon-chat-bubbles" class="flex-1 p-4 overflow-y-auto space-y-3 bg-slate-900/40">
+              <div class="h-full flex flex-col items-center justify-center text-slate-500 text-xs">
+                <i class="fa-regular fa-comment-dots text-4xl mb-2 text-slate-600"></i>
+                <p>Pilih salah satu calon tamu dari daftar di sebelah kiri untuk memeriksa isi percakapan secara live.</p>
+              </div>
+            </div>
+
+            <!-- Front Office Manual Reply Input Bar -->
+            <form id="fo-reply-form" onsubmit="sendFOMessage(event)" class="p-3 border-t border-slate-700 bg-slate-850 flex items-center space-x-2">
+              <input type="text" id="fo-reply-input" disabled placeholder="Pilih tamu terlebih dahulu untuk membalas..." class="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500 disabled:opacity-50">
+              <button type="submit" id="fo-reply-btn" disabled class="px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition">
+                <i class="fa-regular fa-paper-plane"></i>
+                <span>Kirim WA</span>
+              </button>
+            </form>
+          </div>
+
+          <!-- VIEW B: RAW WEBHOOK EVENT TERMINAL -->
+          <div id="mon-terminal-view" class="hidden flex-1 flex flex-col overflow-hidden bg-slate-950">
+            <div class="p-3 border-b border-slate-800 bg-slate-900 flex items-center justify-between text-xs">
+              <div class="flex items-center space-x-2">
+                <span class="w-3 h-3 rounded-full bg-red-500 inline-block"></span>
+                <span class="w-3 h-3 rounded-full bg-yellow-500 inline-block"></span>
+                <span class="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span>
+                <span class="text-slate-400 font-mono text-[11px] ml-2">Console Webhook Event Stream</span>
+              </div>
+              <div class="flex items-center space-x-2">
+                <input type="text" id="terminal-filter" oninput="renderTerminalLogs()" placeholder="Filter log..." class="bg-slate-950 border border-slate-800 rounded px-2 py-1 text-[11px] text-slate-200 placeholder-slate-600 focus:outline-none">
+                <button onclick="clearTerminalDisplay()" class="text-slate-400 hover:text-slate-200 text-[11px]">
+                  <i class="fa-solid fa-ban"></i> Bersihkan Layar
+                </button>
+              </div>
+            </div>
+
+            <!-- Terminal output -->
+            <div id="terminal-output" class="flex-1 p-4 font-mono text-xs overflow-y-auto space-y-2 text-slate-300">
+              <div class="text-slate-500 italic">Menunggu event webhook masuk...</div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- TAB 2: DRAFT RESERVASI FO -->
+    <section id="panel-inquiries" class="tab-panel hidden">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h2 class="text-xl font-bold text-white">Daftar Draft Reservasi dari WhatsApp</h2>
+          <p class="text-sm text-slate-400">Data calon tamu yang dikumpulkan dan direkap oleh Garda AI untuk direview Front Office.</p>
+        </div>
+        <button onclick="loadInquiries()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 rounded text-xs flex items-center space-x-1.5 transition">
+          <i class="fa-solid fa-arrows-rotate"></i>
+          <span>Refresh</span>
+        </button>
+      </div>
+
+      <div id="inquiries-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Dynamic Cards -->
+        <div class="p-8 text-center text-slate-500 col-span-2">Memuat data draft...</div>
+      </div>
+    </section>
+
+    <!-- TAB 3: LOGGER TRANSAKSI WA GATEWAY & TRIPAY (.TXT AUDIT TRAIL) -->
+    <section id="panel-logger" class="tab-panel hidden">
+      <!-- Header Bar -->
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-700/80">
+        <div>
+          <div class="flex items-center space-x-2">
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-amber-500/20 text-amber-400 border border-amber-500/30">
+              <span class="w-1.5 h-1.5 rounded-full bg-amber-400 mr-1.5 animate-pulse"></span>
+              TXT AUDIT TRAIL
+            </span>
+            <h2 class="text-xl font-bold text-white tracking-tight">Logger Transaksi WA Gateway &amp; TriPay</h2>
+          </div>
+          <p class="text-xs text-slate-400 mt-1">Monitoring menyeluruh aktivitas terima &amp; kirim pesan WhatsApp, status pembayaran TriPay, serta file log TXT.</p>
+        </div>
+        <div class="flex items-center flex-wrap gap-2">
+          <a href="/api/v1/logs/download-txt" target="_blank" class="px-3.5 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition shadow-sm">
+            <i class="fa-solid fa-download"></i>
+            <span>Unduh Log (.txt)</span>
+          </a>
+          <a href="/api/v1/logs/raw-txt" target="_blank" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs font-medium flex items-center space-x-1.5 transition">
+            <i class="fa-solid fa-arrow-up-right-from-square text-amber-400"></i>
+            <span>Buka Raw TXT</span>
+          </a>
+          <button onclick="loadLoggerData(true)" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs font-medium flex items-center space-x-1.5 transition">
+            <i class="fa-solid fa-arrows-rotate" id="logger-refresh-spin"></i>
+            <span>Refresh</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- KPI Summary Cards -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <!-- Card 1: WA Inbound -->
+        <div class="bg-slate-800 border border-slate-700 rounded-xl p-4 flex items-center space-x-4 shadow-sm">
+          <div class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 text-xl">
+            <i class="fa-solid fa-inbox"></i>
+          </div>
+          <div>
+            <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Pesan Masuk (Tamu)</div>
+            <div id="logger-stat-inbound" class="text-2xl font-bold font-mono text-white mt-0.5">0</div>
+            <div class="text-[11px] text-emerald-400 font-medium">WhatsApp Gateway Inbound</div>
+          </div>
+        </div>
+
+        <!-- Card 2: WA Outbound -->
+        <div class="bg-slate-800 border border-slate-700 rounded-xl p-4 flex items-center space-x-4 shadow-sm">
+          <div class="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 text-xl">
+            <i class="fa-solid fa-paper-plane"></i>
+          </div>
+          <div>
+            <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Pesan Keluar (Bot/FO)</div>
+            <div id="logger-stat-outbound" class="text-2xl font-bold font-mono text-white mt-0.5">0</div>
+            <div class="text-[11px] text-blue-400 font-medium">Balasan Garda AI &amp; FO</div>
+          </div>
+        </div>
+
+        <!-- Card 3: TriPay Transactions -->
+        <div class="bg-slate-800 border border-slate-700 rounded-xl p-4 flex items-center space-x-4 shadow-sm">
+          <div class="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 text-xl">
+            <i class="fa-solid fa-credit-card"></i>
+          </div>
+          <div>
+            <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Transaksi TriPay</div>
+            <div id="logger-stat-tripay" class="text-2xl font-bold font-mono text-white mt-0.5">0</div>
+            <div class="text-[11px] text-purple-300 font-medium"><span id="logger-stat-tripay-paid" class="text-emerald-400 font-bold">0</span> Lunas (PAID)</div>
+          </div>
+        </div>
+
+        <!-- Card 4: TXT Log File & Status Error -->
+        <div class="bg-slate-800 border border-slate-700 rounded-xl p-4 flex items-center space-x-4 shadow-sm">
+          <div class="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 text-xl">
+            <i class="fa-solid fa-file-lines"></i>
+          </div>
+          <div class="overflow-hidden">
+            <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Format Berkas Log</div>
+            <div class="text-sm font-bold font-mono text-amber-300 truncate mt-0.5">activity_logger.txt</div>
+            <div class="text-[11px] text-slate-400 flex items-center gap-1.5 mt-0.5">
+              <span>Status:</span>
+              <span id="logger-stat-errors-badge" class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/20 text-emerald-400"><span id="logger-stat-errors">0</span> error terdeteksi</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Controls: Filter Tabs & Search -->
+      <div class="bg-slate-800 border border-slate-700 rounded-xl p-4 mb-4 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-sm">
+        <!-- Sub-Tabs Pill Buttons -->
+        <div class="flex items-center space-x-1.5 overflow-x-auto pb-1 md:pb-0">
+          <button onclick="setLoggerFilter('ALL')" id="filter-btn-ALL" class="logger-filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 text-white transition whitespace-nowrap">
+            Semua Aktivitas
+          </button>
+          <button onclick="setLoggerFilter('WA_INBOUND')" id="filter-btn-WA_INBOUND" class="logger-filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 hover:bg-slate-700 text-slate-300 transition whitespace-nowrap">
+            📥 Pesan Masuk (WA Inbound)
+          </button>
+          <button onclick="setLoggerFilter('WA_OUTBOUND')" id="filter-btn-WA_OUTBOUND" class="logger-filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 hover:bg-slate-700 text-slate-300 transition whitespace-nowrap">
+            📤 Pesan Keluar (WA Outbound)
+          </button>
+          <button onclick="setLoggerFilter('TRIPAY')" id="filter-btn-TRIPAY" class="logger-filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 hover:bg-slate-700 text-slate-300 transition whitespace-nowrap">
+            💳 Transaksi TriPay
+          </button>
+          <button onclick="setLoggerFilter('ERROR')" id="filter-btn-ERROR" class="logger-filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 hover:bg-slate-700 text-rose-400 border border-rose-500/30 transition whitespace-nowrap">
+            ⚠️ Log Error &amp; Kendala (<span id="logger-badge-err-count">0</span>)
+          </button>
+          <button onclick="setLoggerFilter('TXT_VIEW')" id="filter-btn-TXT_VIEW" class="logger-filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 hover:bg-slate-700 text-amber-400 border border-amber-500/30 transition whitespace-nowrap">
+            📄 Lihat File TXT Mentah
+          </button>
+        </div>
+
+        <!-- Search Input -->
+        <div class="w-full md:w-72 relative">
+          <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-xs text-slate-400"></i>
+          <input type="text" id="logger-search-input" oninput="handleLoggerSearch(event)" placeholder="Cari nomor WA, ref, pesan..." class="w-full bg-slate-900 border border-slate-700 rounded-lg pl-8 pr-3 py-1.5 text-xs text-white focus:outline-none focus:border-blue-500 font-mono">
+        </div>
+      </div>
+
+      <!-- VIEW 1: Data Table View -->
+      <div id="logger-table-wrapper" class="bg-slate-800 border border-slate-700 rounded-xl overflow-hidden shadow-sm">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs text-slate-300">
+            <thead class="bg-slate-900 text-slate-400 font-semibold border-b border-slate-700 uppercase tracking-wider text-[11px]">
+              <tr>
+                <th class="py-3 px-4 whitespace-nowrap">Waktu (WITA)</th>
+                <th class="py-3 px-4 whitespace-nowrap">Kategori</th>
+                <th class="py-3 px-4 whitespace-nowrap">Pengirim / Tujuan</th>
+                <th class="py-3 px-4 min-w-[280px]">Rincian &amp; Isi Pesan</th>
+                <th class="py-3 px-4 whitespace-nowrap">Status</th>
+                <th class="py-3 px-4 text-right whitespace-nowrap">Aksi Cepat</th>
+              </tr>
+            </thead>
+            <tbody id="logger-table-body" class="divide-y divide-slate-700/60 font-sans">
+              <tr>
+                <td colspan="6" class="py-8 text-center text-slate-500">Memuat log aktivitas...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- VIEW 2: Raw TXT Viewer (Hidden by default) -->
+      <div id="logger-txt-wrapper" class="hidden bg-slate-900 border border-slate-700 rounded-xl overflow-hidden shadow-sm">
+        <div class="bg-slate-850 px-4 py-3 border-b border-slate-700 flex items-center justify-between">
+          <div class="flex items-center space-x-2">
+            <i class="fa-solid fa-terminal text-amber-400 text-xs"></i>
+            <span class="text-xs font-mono font-semibold text-slate-200">logs/activity_logger.txt (Isi File Mentah)</span>
+          </div>
+          <div class="flex items-center space-x-2">
+            <button onclick="copyRawTxtContent()" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 rounded text-xs transition flex items-center space-x-1">
+              <i class="fa-solid fa-copy"></i>
+              <span>Salin Teks</span>
+            </button>
+            <button onclick="refreshRawTxtContent()" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 rounded text-xs transition flex items-center space-x-1">
+              <i class="fa-solid fa-arrows-rotate"></i>
+              <span>Refresh TXT</span>
+            </button>
+          </div>
+        </div>
+        <div class="p-4 bg-slate-950 font-mono text-xs text-emerald-400/90 leading-relaxed overflow-x-auto max-h-[600px] overflow-y-auto select-all" id="logger-raw-pre">
+          Memuat file log text...
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB CRYPTO SECUREPAY & WEB3 ESCROW         -->
+    <!-- ========================================== -->
+    <section id="panel-crypto" class="tab-panel hidden space-y-6">
+      <!-- Header Banner -->
+      <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 border border-indigo-500/30 rounded-2xl p-6 shadow-xl relative overflow-hidden">
+        <div class="absolute -right-10 -bottom-10 w-60 h-60 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
+          <div>
+            <div class="flex items-center space-x-3 mb-2">
+              <span class="p-2 bg-indigo-500/20 border border-indigo-500/40 rounded-xl text-indigo-400">
+                <i class="fa-solid fa-cube text-xl"></i>
+              </span>
+              <div>
+                <h2 class="text-xl font-black text-white tracking-tight flex items-center gap-2">
+                  <span>Web3 Crypto Escrow & SecurePay Engine</span>
+                  <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                    <i class="fa-solid fa-network-wired mr-1"></i>BSC Testnet (97)
+                  </span>
+                </h2>
+                <p class="text-xs text-slate-400">Notarisasi on-chain anti-fraud, escrow USDT otomatis, dan token loyalitas tamu hotel (BEP-20 ANV).</p>
+              </div>
+            </div>
+          </div>
+          <div class="flex items-center space-x-3">
+            <button onclick="openVerifyModal()" class="px-3.5 py-2 bg-indigo-600/80 hover:bg-indigo-600 text-white rounded-xl text-xs font-semibold shadow-lg shadow-indigo-600/20 transition flex items-center space-x-2 border border-indigo-400/30">
+              <i class="fa-solid fa-shield-halved"></i>
+              <span>Verifikasi Notaris On-Chain</span>
+            </button>
+            <button onclick="refreshCryptoStats()" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-medium transition flex items-center space-x-2 border border-slate-700">
+              <i class="fa-solid fa-arrows-rotate" id="crypto-refresh-icon"></i>
+              <span>Refresh Web3</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- KPI Stat Cards -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- 1. Total On-Chain Notarized -->
+        <div class="bg-slate-800/90 border border-slate-700/80 rounded-xl p-5 shadow-sm hover:border-slate-600 transition">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">On-Chain Notarisasi</span>
+            <span class="p-2 bg-blue-500/10 text-blue-400 rounded-lg text-sm"><i class="fa-solid fa-fingerprint"></i></span>
+          </div>
+          <div class="text-2xl font-black text-white" id="stat-crypto-records">{{ crypto_stats.total_onchain_records }}</div>
+          <div class="mt-2 text-xs flex items-center text-emerald-400 font-medium">
+            <i class="fa-solid fa-circle-check mr-1.5 text-[10px]"></i>
+            <span id="stat-crypto-verified">{{ crypto_stats.verified_records }} Terverifikasi di BSC</span>
+          </div>
+        </div>
+
+        <!-- 2. Active Escrows -->
+        <div class="bg-slate-800/90 border border-slate-700/80 rounded-xl p-5 shadow-sm hover:border-slate-600 transition">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Escrow Aktif</span>
+            <span class="p-2 bg-amber-500/10 text-amber-400 rounded-lg text-sm"><i class="fa-solid fa-lock"></i></span>
+          </div>
+          <div class="text-2xl font-black text-amber-300" id="stat-crypto-escrows">{{ crypto_stats.active_escrows }} <span class="text-sm font-normal text-slate-400">Tx</span></div>
+          <div class="mt-2 text-xs flex items-center text-slate-300 font-medium">
+            <i class="fa-brands fa-ethereum mr-1.5 text-amber-400"></i>
+            <span id="stat-crypto-escrow-usdt">{{ crypto_stats.total_escrow_usdt }} USDT Terkunci</span>
+          </div>
+        </div>
+
+        <!-- 3. Settled USDT -->
+        <div class="bg-slate-800/90 border border-slate-700/80 rounded-xl p-5 shadow-sm hover:border-slate-600 transition">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Volume Released</span>
+            <span class="p-2 bg-emerald-500/10 text-emerald-400 rounded-lg text-sm"><i class="fa-solid fa-money-bill-transfer"></i></span>
+          </div>
+          <div class="text-2xl font-black text-emerald-400" id="stat-crypto-released">{{ crypto_stats.released_usdt }} <span class="text-sm font-normal text-slate-400">USDT</span></div>
+          <div class="mt-2 text-xs flex items-center text-slate-400 font-medium">
+            <i class="fa-solid fa-bolt mr-1.5 text-emerald-400"></i>
+            <span>Instan Settlement ke Hotel</span>
+          </div>
+        </div>
+
+        <!-- 4. Loyalty Tokens -->
+        <div class="bg-slate-800/90 border border-slate-700/80 rounded-xl p-5 shadow-sm hover:border-slate-600 transition">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Loyalty Poin (ANV)</span>
+            <span class="p-2 bg-purple-500/10 text-purple-400 rounded-lg text-sm"><i class="fa-solid fa-award"></i></span>
+          </div>
+          <div class="text-2xl font-black text-purple-400" id="stat-crypto-points">{{ crypto_stats.total_points_issued }} <span class="text-sm font-normal text-slate-400">ANV</span></div>
+          <div class="mt-2 text-xs flex items-center text-slate-300 font-medium">
+            <i class="fa-solid fa-users mr-1.5 text-purple-400"></i>
+            <span id="stat-crypto-members">{{ crypto_stats.total_loyalty_members }} Anggota Aktif</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main 2-Column Content -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Panel Left: Crypto Escrow Bookings -->
+        <div class="bg-slate-800 border border-slate-700 rounded-xl p-5 shadow-sm flex flex-col">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center space-x-2">
+              <i class="fa-solid fa-vault text-amber-400"></i>
+              <h3 class="text-sm font-bold text-white uppercase tracking-wider">Transaksi Crypto Escrow (USDT)</h3>
+            </div>
+            <span class="text-xs text-slate-400">Pelepasan dana saat FO konfirmasi Check-in</span>
+          </div>
+
+          <div class="overflow-x-auto flex-1">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-900/60 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-700">
+                <tr>
+                  <th class="py-2.5 px-3">Booking Ref</th>
+                  <th class="py-2.5 px-3">Guest / Wallet</th>
+                  <th class="py-2.5 px-3">Amount</th>
+                  <th class="py-2.5 px-3">Status</th>
+                  <th class="py-2.5 px-3 text-right">Aksi FO</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-700/60 font-mono text-slate-300" id="escrow-table-body">
+                {% if escrows %}
+                  {% for esc in escrows %}
+                  <tr class="hover:bg-slate-750 transition">
+                    <td class="py-3 px-3">
+                      <div class="font-bold text-white font-sans">{{ esc.booking_ref }}</div>
+                      <div class="text-[10px] text-slate-400 font-sans">{{ esc.guest_name or '-' }}</div>
+                    </td>
+                    <td class="py-3 px-3">
+                      <div class="text-slate-300 font-sans">{{ esc.guest_phone }}</div>
+                      <div class="text-[10px] text-slate-400 truncate max-w-[120px]">{{ esc.guest_wallet_address or 'Auto Escrow Vault' }}</div>
+                    </td>
+                    <td class="py-3 px-3">
+                      <div class="font-bold text-amber-400">{{ esc.amount_usdt }} USDT</div>
+                      <div class="text-[10px] text-slate-400">Rp {{ "{:,.0f}".format(esc.amount_idr) }}</div>
+                    </td>
+                    <td class="py-3 px-3">
+                      {% if esc.status == 'LOCKED' or esc.status == 'CONFIRMED' %}
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                          <i class="fa-solid fa-lock text-[8px] mr-1"></i>LOCKED
+                        </span>
+                      {% elif esc.status == 'RELEASED' %}
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                          <i class="fa-solid fa-check text-[8px] mr-1"></i>RELEASED
+                        </span>
+                      {% elif esc.status == 'REFUNDED' %}
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                          <i class="fa-solid fa-arrow-rotate-left text-[8px] mr-1"></i>REFUNDED
+                        </span>
+                      {% else %}
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-500/20 text-slate-300">
+                          {{ esc.status }}
+                        </span>
+                      {% endif %}
+                    </td>
+                    <td class="py-3 px-3 text-right space-x-1 font-sans">
+                      {% if esc.status == 'LOCKED' or esc.status == 'CONFIRMED' or esc.status == 'PENDING' %}
+                        <button onclick="confirmCheckinAction('{{ esc.booking_ref }}')" title="Konfirmasi Check-In & Lepaskan Dana USDT ke Hotel" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-[11px] font-medium transition shadow-sm">
+                          <i class="fa-solid fa-key mr-1"></i>Check-In
+                        </button>
+                        <button onclick="cancelEscrowAction('{{ esc.booking_ref }}')" title="Refund Guest" class="px-2 py-1 bg-rose-600/80 hover:bg-rose-600 text-white rounded text-[11px] font-medium transition">
+                          <i class="fa-solid fa-xmark"></i>
+                        </button>
+                      {% else %}
+                        <button onclick="verifyTransactionAction('{{ esc.booking_ref }}')" class="px-2 py-1 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded text-[11px] font-medium transition">
+                          <i class="fa-solid fa-shield"></i> Bukti
+                        </button>
+                      {% endif %}
+                    </td>
+                  </tr>
+                  {% endfor %}
+                {% else %}
+                  <tr>
+                    <td colspan="5" class="py-8 text-center text-slate-500 font-sans">
+                      <i class="fa-solid fa-box-open text-2xl mb-2 block"></i>
+                      Belum ada transaksi crypto escrow. Tamu dapat memilih opsi B (Crypto USDT) melalui WhatsApp Bot.
+                    </td>
+                  </tr>
+                {% endif %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Panel Right: On-Chain Audit Records (Notarization) -->
+        <div class="bg-slate-800 border border-slate-700 rounded-xl p-5 shadow-sm flex flex-col">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center space-x-2">
+              <i class="fa-solid fa-stamp text-indigo-400"></i>
+              <h3 class="text-sm font-bold text-white uppercase tracking-wider">Notarisasi On-Chain (Fiat QRIS & Crypto)</h3>
+            </div>
+            <span class="text-xs text-indigo-400 font-mono">SecurePayRegistry.sol</span>
+          </div>
+
+          <div class="overflow-x-auto flex-1">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-900/60 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-700">
+                <tr>
+                  <th class="py-2.5 px-3">Booking / Payment</th>
+                  <th class="py-2.5 px-3">Payload Keccak256 Hash</th>
+                  <th class="py-2.5 px-3">Status Block</th>
+                  <th class="py-2.5 px-3 text-right">Verifikasi</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-700/60 font-mono text-slate-300" id="onchain-table-body">
+                {% if onchain_records %}
+                  {% for rec in onchain_records %}
+                  <tr class="hover:bg-slate-750 transition">
+                    <td class="py-3 px-3">
+                      <div class="font-bold text-white font-sans">{{ rec.booking_ref }}</div>
+                      <div class="text-[10px] text-slate-400 flex items-center space-x-1.5 font-sans">
+                        <span class="px-1.5 py-0.2 rounded bg-slate-700 text-slate-300 uppercase text-[9px]">{{ rec.payment_method }}</span>
+                        <span>Rp {{ "{:,.0f}".format(rec.amount_idr) }}</span>
+                      </div>
+                    </td>
+                    <td class="py-3 px-3">
+                      <div class="text-[11px] text-indigo-300 truncate max-w-[150px]" title="{{ rec.tx_hash }}">
+                        {{ rec.tx_hash[:10] }}...{{ rec.tx_hash[-8:] }}
+                      </div>
+                      <div class="text-[9px] text-slate-500 font-sans">
+                        {{ rec.created_at.strftime('%d/%m/%Y %H:%M') if rec.created_at else '-' }}
+                      </div>
+                    </td>
+                    <td class="py-3 px-3">
+                      {% if rec.verification_status == 'VERIFIED' %}
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center w-fit">
+                          <i class="fa-solid fa-circle-check text-[8px] mr-1"></i>Blk #{{ rec.block_number or 'Auto' }}
+                        </span>
+                      {% else %}
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center w-fit">
+                          <i class="fa-solid fa-clock text-[8px] mr-1"></i>PENDING
+                        </span>
+                      {% endif %}
+                    </td>
+                    <td class="py-3 px-3 text-right font-sans">
+                      <button onclick="verifyTransactionAction('{{ rec.booking_ref }}')" class="px-2.5 py-1 bg-indigo-600/80 hover:bg-indigo-600 text-white rounded text-[11px] font-medium transition shadow-sm">
+                        <i class="fa-solid fa-magnifying-glass mr-1"></i>Audit
+                      </button>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                {% else %}
+                  <tr>
+                    <td colspan="4" class="py-8 text-center text-slate-500 font-sans">
+                      <i class="fa-solid fa-shield-halved text-2xl mb-2 block"></i>
+                      Setiap pembayaran QRIS TriPay dan Escrow akan otomatis ter-notarisasi on-chain di sini.
+                    </td>
+                  </tr>
+                {% endif %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Row: Loyalty Members & Contract Directory -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Loyalty Rewards Table (2 cols) -->
+        <div class="lg:col-span-2 bg-slate-800 border border-slate-700 rounded-xl p-5 shadow-sm">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center space-x-2">
+              <i class="fa-solid fa-crown text-purple-400"></i>
+              <h3 class="text-sm font-bold text-white uppercase tracking-wider">Top Anggota Loyalty Program (Token ANV)</h3>
+            </div>
+            <span class="text-xs text-purple-300 bg-purple-500/10 px-2 py-0.5 rounded border border-purple-500/30 font-medium">Auto-reward 5% Nilai Booking</span>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-900/60 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-700">
+                <tr>
+                  <th class="py-2.5 px-3">Tamu (No HP)</th>
+                  <th class="py-2.5 px-3">Tier Member</th>
+                  <th class="py-2.5 px-3">Saldo Token (ANV)</th>
+                  <th class="py-2.5 px-3">Total Akumulasi</th>
+                  <th class="py-2.5 px-3 text-right">Dompet Web3</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-700/60 font-mono text-slate-300">
+                {% if loyalty_members %}
+                  {% for mem in loyalty_members %}
+                  <tr class="hover:bg-slate-750 transition">
+                    <td class="py-3 px-3">
+                      <div class="font-bold text-white font-sans">{{ mem.phone }}</div>
+                    </td>
+                    <td class="py-3 px-3 font-sans">
+                      {% if mem.tier == 'PLATINUM' %}
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">💎 PLATINUM</span>
+                      {% elif mem.tier == 'GOLD' %}
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">⭐ GOLD</span>
+                      {% else %}
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-600/30 text-slate-300 border border-slate-600/40">SILVER</span>
+                      {% endif %}
+                    </td>
+                    <td class="py-3 px-3">
+                      <span class="text-purple-400 font-bold text-sm">{{ "{:,.2f}".format(mem.balance) }} ANV</span>
+                    </td>
+                    <td class="py-3 px-3 text-slate-400">
+                      {{ "{:,.2f}".format(mem.total_earned) }} ANV
+                    </td>
+                    <td class="py-3 px-3 text-right">
+                      <span class="text-[10px] text-slate-400 truncate max-w-[120px] inline-block font-mono">
+                        {{ mem.wallet_address or 'Mapped via Phone' }}
+                      </span>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                {% else %}
+                  <tr>
+                    <td colspan="5" class="py-6 text-center text-slate-500 font-sans">
+                      Belum ada poin loyalitas tercatat. Poin otomatis diterbitkan saat check-in tamu selesai.
+                    </td>
+                  </tr>
+                {% endif %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Contract Registry & Architecture Info (1 col) -->
+        <div class="bg-slate-800 border border-slate-700 rounded-xl p-5 shadow-sm space-y-4">
+          <div class="flex items-center space-x-2">
+            <i class="fa-solid fa-link text-indigo-400"></i>
+            <h3 class="text-sm font-bold text-white uppercase tracking-wider">Direktori Smart Contract</h3>
+          </div>
+
+          <div class="space-y-3 text-xs">
+            <div class="p-3 bg-slate-900/80 border border-slate-700 rounded-lg">
+              <div class="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1 flex justify-between">
+                <span>SecurePayRegistry (Notaris)</span>
+                <span class="text-emerald-400">BSC 97</span>
+              </div>
+              <div class="font-mono text-indigo-300 text-[11px] truncate">{{ settings.CONTRACT_REGISTRY_ADDRESS }}</div>
+              <a href="https://testnet.bscscan.com/address/{{ settings.CONTRACT_REGISTRY_ADDRESS }}" target="_blank" class="mt-1.5 inline-flex items-center text-[10px] text-blue-400 hover:text-blue-300">
+                <i class="fa-solid fa-arrow-up-right-from-square mr-1"></i>Lihat di BscScan
+              </a>
+            </div>
+
+            <div class="p-3 bg-slate-900/80 border border-slate-700 rounded-lg">
+              <div class="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1 flex justify-between">
+                <span>HotelEscrow (Kunci USDT)</span>
+                <span class="text-amber-400">Escrow</span>
+              </div>
+              <div class="font-mono text-amber-300 text-[11px] truncate">{{ settings.CONTRACT_ESCROW_ADDRESS }}</div>
+              <a href="https://testnet.bscscan.com/address/{{ settings.CONTRACT_ESCROW_ADDRESS }}" target="_blank" class="mt-1.5 inline-flex items-center text-[10px] text-blue-400 hover:text-blue-300">
+                <i class="fa-solid fa-arrow-up-right-from-square mr-1"></i>Lihat di BscScan
+              </a>
+            </div>
+
+            <div class="p-3 bg-slate-900/80 border border-slate-700 rounded-lg">
+              <div class="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1 flex justify-between">
+                <span>LoyaltyToken (BEP-20 ANV)</span>
+                <span class="text-purple-400">Rewards</span>
+              </div>
+              <div class="font-mono text-purple-300 text-[11px] truncate">{{ settings.CONTRACT_LOYALTY_TOKEN_ADDRESS }}</div>
+              <a href="https://testnet.bscscan.com/address/{{ settings.CONTRACT_LOYALTY_TOKEN_ADDRESS }}" target="_blank" class="mt-1.5 inline-flex items-center text-[10px] text-blue-400 hover:text-blue-300">
+                <i class="fa-solid fa-arrow-up-right-from-square mr-1"></i>Lihat di BscScan
+              </a>
+            </div>
+
+            <div class="p-3 bg-indigo-950/40 border border-indigo-500/30 rounded-lg text-slate-300 text-[11px] leading-relaxed">
+              <i class="fa-solid fa-shield-cat text-indigo-400 mr-1.5"></i>
+              <strong>Zero-PII Compliance:</strong> Data pribadi tamu (Nama, HP) tidak pernah disimpan di blockchain. Hanya hash kriptografis unik yang dicatat on-chain sesuai UU PDP No. 27/2022.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VERIFICATION MODAL -->
+    <div id="crypto-verify-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+      <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-lg w-full p-6 shadow-2xl relative space-y-4">
+        <button onclick="closeVerifyModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+        <div class="flex items-center space-x-3">
+          <span class="p-2.5 bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 rounded-xl">
+            <i class="fa-solid fa-shield-halved text-xl"></i>
+          </span>
+          <div>
+            <h3 class="text-base font-bold text-white">Verifikasi Keaslian On-Chain</h3>
+            <p class="text-xs text-slate-400">Cek status notarisasi transaksi di blockchain BSC Testnet</p>
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <label class="block text-xs font-semibold text-slate-300">Masukkan Booking Reference :</label>
+          <div class="flex space-x-2">
+            <input type="text" id="verify-input-ref" placeholder="AGH-2026-XXXX" class="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:border-indigo-500 focus:outline-none font-mono">
+            <button onclick="executeVerification()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold transition">
+              Cek Bukti
+            </button>
+          </div>
+        </div>
+
+        <div id="verify-result-box" class="hidden p-4 rounded-xl border text-xs font-mono space-y-2 bg-slate-950">
+          <!-- Injected via JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB DISEMBUNYIKAN (HIDDEN SESUAI PERMINTAAN USER): Konfigurasi WhatsApp Gateway -->
+    <section id="panel-settings" class="tab-panel hidden max-w-3xl" style="display: none !important;">
+      <div class="bg-slate-800 border border-slate-700 rounded-xl p-6 shadow-sm mb-6">
+        <h2 class="text-lg font-bold text-white mb-1 flex items-center space-x-2">
+          <i class="fa-brands fa-whatsapp text-emerald-400"></i>
+          <span>Konfigurasi WhatsApp Gateway (Wuller/wa)</span>
+        </h2>
+        <p class="text-xs text-slate-400 mb-6">Kelola koneksi antara sistem hotel ini dengan server gateway WhatsApp Anda.</p>
+
+        <form id="settings-form" onsubmit="saveSettings(event)" class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold uppercase text-slate-400 mb-1">WA Gateway Base URL</label>
+            <input type="text" id="wa_gateway_url" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none" value="{{ settings.WA_GATEWAY_URL }}">
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-semibold uppercase text-slate-400 mb-1">WA Instance ID (Nomor Bot)</label>
+              <input type="text" id="wa_instance_id" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none" value="{{ settings.WA_INSTANCE_ID }}">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold uppercase text-slate-400 mb-1">WA Gateway API Key</label>
+              <input type="password" id="wa_api_key" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none" value="{{ settings.WA_API_KEY }}">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold uppercase text-slate-400 mb-1">Webhook Secret (HMAC-SHA256)</label>
+            <input type="text" id="webhook_secret" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none" value="{{ settings.WEBHOOK_SECRET }}">
+          </div>
+
+          <div class="border-t border-slate-700 pt-4">
+            <h3 class="text-sm font-semibold text-white mb-2">Pendaftaran Webhook Otomatis ke Gateway</h3>
+            <p class="text-xs text-slate-400 mb-2">Ketikkan domain / URL publik layanan hotel ini (misal dari Railway atau ngrok/tunnel):</p>
+            <div class="flex space-x-2">
+              <input type="text" id="public_webhook_url" value="{{ settings.public_webhook_url }}" placeholder="{{ settings.public_webhook_url }}" class="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none">
+              <button type="button" onclick="registerWebhook()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-medium transition flex items-center space-x-1">
+                <i class="fa-solid fa-cloud-arrow-up"></i>
+                <span>Daftarkan Webhook</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="flex justify-end pt-4">
+            <button type="submit" class="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition">
+              Simpan Konfigurasi
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- TAB DISEMBUNYIKAN: SIMULATOR PERCAKAPAN -->
+    <section id="panel-simulator" class="tab-panel hidden max-w-2xl mx-auto" style="display: none !important;">
+      <div class="bg-slate-800 border border-slate-700 rounded-xl flex flex-col h-[600px] shadow-sm">
+        <div class="p-4 border-b border-slate-700 flex items-center justify-between">
+          <div class="flex items-center space-x-2">
+            <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs">
+              🤖
+            </div>
+            <div>
+              <h3 class="font-bold text-sm text-white">Simulasi Garda AI Hotel Concierge</h3>
+              <p class="text-[11px] text-slate-400">Pengujian alur tanya-jawab & rekap draft tanpa WA fisik</p>
+            </div>
+          </div>
+          <button onclick="resetSimulator()" class="text-xs text-slate-400 hover:text-slate-200">
+            <i class="fa-solid fa-trash-can"></i> Reset Sesi
+          </button>
+        </div>
+
+        <!-- Chat Box -->
+        <div id="chat-messages" class="flex-1 p-4 overflow-y-auto space-y-3">
+          <div class="flex items-start space-x-2">
+            <div class="bg-slate-700 p-3 rounded-2xl rounded-tl-none max-w-[85%] text-xs text-slate-200 leading-relaxed">
+              Halo! Saya <b>Garda</b>, asisten reservasi virtual di {{ hotel_name }}. Ada yang bisa saya bantu terkait ketersediaan kamar, tipe bed, atau harga hari ini? 😊
+            </div>
+          </div>
+        </div>
+
+        <!-- Input Bar -->
+        <form onsubmit="sendSimulatorMessage(event)" class="p-3 border-t border-slate-700 bg-slate-850 space-y-2">
+          <div class="flex space-x-2">
+            <input type="text" id="sim-input" placeholder="Tulis pesan (misal: 'ada kamar kosong besok untuk 2 orang?')..." class="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
+            <button type="submit" id="sim-send-btn" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-semibold transition">
+              Kirim
+            </button>
+          </div>
+          <div class="flex items-center justify-between text-[11px] text-slate-400 px-1">
+            <label class="flex items-center space-x-1.5 cursor-pointer hover:text-slate-200">
+              <input type="checkbox" id="sim-forward-wa" class="rounded bg-slate-900 border-slate-700 text-blue-500 focus:ring-0">
+              <span>Kirim juga balasan Garda langsung ke nomor WhatsApp fisik (<span class="font-mono text-blue-400" id="sim-phone-label">628123456789</span>)</span>
+            </label>
+            <button type="button" onclick="changeSimPhone()" class="text-blue-400 hover:underline">Ganti Nomor</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- TAB DISEMBUNYIKAN: KATALOG KAMAR OPERA -->
+    <section id="panel-catalog" class="tab-panel hidden" style="display: none !important;">
+      <div class="mb-4">
+        <h2 class="text-xl font-bold text-white">Katalog Kamar Standar OPERA PMS</h2>
+        <p class="text-sm text-slate-400">Inventaris kamar & rate codes yang diinjeksikan secara dinamis ke Garda LLM.</p>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+        {% for r in rooms %}
+        <div class="bg-slate-800 border border-slate-700 rounded-xl p-5 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-blue-500/20 text-blue-400 border border-blue-500/30">{{ r.code }}</span>
+              <span class="text-xs text-emerald-400 font-semibold">{{ r.available_units }} unit tersedia</span>
+            </div>
+            <h3 class="font-bold text-white text-base mb-1">{{ r.name }}</h3>
+            <p class="text-xs text-slate-400 mb-3">{{ r.bed }} • {{ r.capacity }}</p>
+            <p class="text-xl font-extrabold text-blue-400 mb-3">Rp {{ "{:,}".format(r.price_per_night) }}<span class="text-xs text-slate-500 font-normal"> /malam</span></p>
+            <ul class="text-xs text-slate-300 space-y-1.5 mb-4">
+              {% for f in r.facilities %}
+              <li class="flex items-center space-x-1.5">
+                <i class="fa-solid fa-check text-emerald-400 text-[10px]"></i>
+                <span>{{ f }}</span>
+              </li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+
+    <!-- TAB DISEMBUNYIKAN: STATUS TENANT & SKEMA DATABASE -->
+    <section id="panel-tenant" class="tab-panel hidden" style="display: none !important;">
+      <div class="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-xl font-bold text-white flex items-center gap-2">
+            <span>Status Tenant &amp; Profil Database PMS</span>
+            <span class="px-2 py-0.5 text-xs font-semibold rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 uppercase">{{ tenant_status.status }}</span>
+          </h2>
+          <p class="text-sm text-slate-400">Informasi tenant aktif yang digunakan oleh Hotel API &amp; Agen AI Garda untuk query ketersediaan kamar, reservasi, dan pembayaran.</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <a href="/api/v1/tenant/status" target="_blank" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-xs font-mono text-blue-400 border border-slate-600 rounded-lg flex items-center gap-1.5 transition">
+            <i class="fa-solid fa-code"></i> JSON Status
+          </a>
+          <a href="/api/v1/tenant/schema-tables" target="_blank" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-xs font-mono text-emerald-400 border border-slate-600 rounded-lg flex items-center gap-1.5 transition">
+            <i class="fa-solid fa-table-list"></i> JSON Schema
+          </a>
+        </div>
+      </div>
+
+      <!-- Grid Cards -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        <!-- Card 1: Profil Tenant -->
+        <div class="bg-slate-800 border border-slate-700 rounded-xl p-5 lg:col-span-2">
+          <h3 class="text-sm font-semibold text-slate-300 uppercase tracking-wider mb-4 flex items-center gap-2">
+            <i class="fa-solid fa-building text-blue-400"></i> Informasi Identitas Tenant
+          </h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+            <div>
+              <span class="text-slate-400 block mb-1">Nama Akomodasi:</span>
+              <p class="font-bold text-white text-sm">{{ tenant_status.name }}</p>
+              <span class="text-slate-500">{{ tenant_status.legal_name }}</span>
+            </div>
+            <div>
+              <span class="text-slate-400 block mb-1">Tenant ID (UUID):</span>
+              <div class="flex items-center gap-1.5">
+                <code class="px-2 py-1 bg-slate-900 text-amber-300 rounded font-mono select-all">{{ tenant_status.tenant_id }}</code>
+                <button onclick="navigator.clipboard.writeText('{{ tenant_status.tenant_id }}'); showToast('Tenant ID disalin ke clipboard!');" class="p-1 hover:text-white text-slate-400 transition" title="Salin ID">
+                  <i class="fa-solid fa-copy"></i>
+                </button>
+              </div>
+            </div>
+            <div>
+              <span class="text-slate-400 block mb-1">PostgreSQL Schema:</span>
+              <code class="px-2 py-1 bg-slate-900 text-emerald-400 rounded font-mono font-semibold">{{ tenant_status.schema_name }}</code>
+            </div>
+            <div>
+              <span class="text-slate-400 block mb-1">Zona Waktu &amp; Mata Uang:</span>
+              <p class="font-medium text-slate-200">{{ tenant_status.timezone }} (WITA) • {{ tenant_status.currency }} ({{ tenant_status.locale }})</p>
+            </div>
+            <div class="md:col-span-2">
+              <span class="text-slate-400 block mb-1">Alamat Properti:</span>
+              <p class="font-medium text-slate-200 leading-relaxed">{{ tenant_status.address }}</p>
+            </div>
+            <div>
+              <span class="text-slate-400 block mb-1">Kontak Telepon / WhatsApp:</span>
+              <p class="font-medium text-slate-200 font-mono">{{ tenant_status.phone }}</p>
+            </div>
+            <div>
+              <span class="text-slate-400 block mb-1">Email Publik:</span>
+              <p class="font-medium text-slate-200 font-mono">{{ tenant_status.email }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2: Statistik Real-Time Database -->
+        <div class="bg-slate-800 border border-slate-700 rounded-xl p-5 flex flex-col justify-between">
+          <div>
+            <h3 class="text-sm font-semibold text-slate-300 uppercase tracking-wider mb-4 flex items-center gap-2">
+              <i class="fa-solid fa-database text-emerald-400"></i> Statistik Database &amp; Kamar
+            </h3>
+            <div class="space-y-3">
+              <div class="flex items-center justify-between p-3 bg-slate-900/60 rounded-lg border border-slate-700/50">
+                <span class="text-xs text-slate-400">Total Kamar Fisik</span>
+                <span class="font-bold text-white text-lg font-mono">{{ tenant_status.stats.total_rooms }} <span class="text-xs text-slate-400 font-normal">unit</span></span>
+              </div>
+              <div class="flex items-center justify-between p-3 bg-slate-900/60 rounded-lg border border-slate-700/50">
+                <span class="text-xs text-slate-400">Kamar Tersedia (Vacant)</span>
+                <span class="font-bold text-emerald-400 text-lg font-mono">{{ tenant_status.stats.available_rooms }} <span class="text-xs text-emerald-500 font-normal">unit</span></span>
+              </div>
+              <div class="flex items-center justify-between p-3 bg-slate-900/60 rounded-lg border border-slate-700/50">
+                <span class="text-xs text-slate-400">Kamar Terisi (Occupied)</span>
+                <span class="font-bold text-amber-400 text-lg font-mono">{{ tenant_status.stats.occupied_rooms }} <span class="text-xs text-amber-500 font-normal">unit</span></span>
+              </div>
+              <div class="flex items-center justify-between p-3 bg-slate-900/60 rounded-lg border border-slate-700/50">
+                <span class="text-xs text-slate-400">Tipe Kamar Aktif</span>
+                <span class="font-bold text-blue-400 text-lg font-mono">{{ tenant_status.stats.total_room_types }} <span class="text-xs text-blue-500 font-normal">tipe</span></span>
+              </div>
+            </div>
+          </div>
+          <div class="mt-4 pt-3 border-t border-slate-700/60 flex items-center justify-between text-xs text-slate-400">
+            <span>Koneksi DB:</span>
+            {% if tenant_status.db_connected %}
+            <span class="text-emerald-400 font-semibold flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Terhubung (429 Tabel)</span>
+            {% else %}
+            <span class="text-red-400 font-semibold">Gagal Terhubung</span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Modul ERP Terpasang -->
+      <div class="bg-slate-800 border border-slate-700 rounded-xl p-5 mb-6">
+        <h3 class="text-sm font-semibold text-slate-300 uppercase tracking-wider mb-3 flex items-center gap-2">
+          <i class="fa-solid fa-cubes text-purple-400"></i> Modul Anvieo ERP yang Terpasang
+        </h3>
+        <div class="flex flex-wrap gap-2">
+          {% for m in tenant_status.installed_modules %}
+          <span class="px-2.5 py-1 rounded text-xs font-mono font-medium bg-purple-500/10 text-purple-300 border border-purple-500/20">
+            <i class="fa-solid fa-check text-[10px] mr-1 text-purple-400"></i>{{ m }}
+          </span>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Interactive Schema Inspector -->
+      <div class="bg-slate-800 border border-slate-700 rounded-xl p-5">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
+          <div>
+            <h3 class="text-sm font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+              <i class="fa-solid fa-table-cells text-sky-400"></i> Daftar Tabel Skema <code class="font-mono text-emerald-400 lowercase">tenant_agnia_guesthouse</code>
+            </h3>
+            <p class="text-xs text-slate-400">Eksplorasi tabel-tabel di database tanpa perlu login ke client database eksternal.</p>
+          </div>
+          <button onclick="loadSchemaTablesViewer()" id="btn-load-schema" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-medium flex items-center gap-2 transition self-start md:self-auto shadow-sm">
+            <i class="fa-solid fa-arrows-rotate" id="schema-load-icon"></i>
+            <span>Muat Daftar Tabel (429 Tabel)</span>
+          </button>
+        </div>
+
+        <div id="schema-viewer-container" class="hidden">
+          <div class="mb-3">
+            <input type="text" id="schema-table-search" oninput="filterSchemaTables()" placeholder="Cari nama tabel (misal: hotel_rooms, reservation, folio)..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500 font-mono">
+          </div>
+          <div id="schema-category-badges" class="flex flex-wrap gap-1.5 mb-3 text-[11px]"></div>
+          <div class="max-h-72 overflow-y-auto bg-slate-900/80 rounded-lg border border-slate-700/60 p-3 font-mono text-xs" id="schema-tables-list">
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    // State global untuk Live Monitoring
+    let liveLogsData = { logs: [], inquiries: [], stats: {} };
+    let selectedGuestPhone = null;
+    let currentMonitoringView = 'chat';
+    let autoRefreshTimer = null;
+    let autoRefreshActive = true;
+    let currentGuestFilter = 'all';
+    let currentActiveTab = 'monitoring';
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      document.getElementById('toast-msg').innerText = msg;
+      t.classList.remove('hidden');
+      setTimeout(() => t.classList.add('hidden'), 3500);
+    }
+
+    function saveSettings(e) {
+      if (e) e.preventDefault();
+      showToast('Konfigurasi disimpan di browser. Untuk permanen, sesuaikan file .env di server.');
+    }
+
+    function switchTab(tabId) {
+      currentActiveTab = tabId;
+      document.querySelectorAll('.tab-panel').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('border-blue-500', 'text-blue-400');
+        btn.classList.add('border-transparent', 'text-slate-400');
+      });
+
+      const panel = document.getElementById('panel-' + tabId);
+      if (panel) panel.classList.remove('hidden');
+      const activeBtn = document.getElementById('tab-' + tabId);
+      if (activeBtn) {
+        activeBtn.classList.remove('border-transparent', 'text-slate-400');
+        activeBtn.classList.add('border-blue-500', 'text-blue-400');
+      }
+
+      if (tabId === 'monitoring') {
+        fetchLiveLogs(false);
+      } else if (tabId === 'inquiries') {
+        loadInquiries();
+      } else if (tabId === 'logger') {
+        loadLoggerData(false);
+      } else if (tabId === 'crypto') {
+        refreshCryptoStats();
+      }
+    }
+
+    // -------------------------------------------------------------
+    // WEB3 CRYPTO SECUREPAY LOGIC
+    // -------------------------------------------------------------
+    async function refreshCryptoStats() {
+      const icon = document.getElementById('crypto-refresh-icon');
+      if (icon) icon.classList.add('fa-spin');
+      try {
+        const res = await fetch('/api/v2/dashboard/crypto-stats');
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        if (data.status === 'success' && data.stats) {
+          const s = data.stats;
+          document.getElementById('stat-crypto-records').innerText = s.total_onchain_records || 0;
+          document.getElementById('stat-crypto-verified').innerText = (s.verified_records || 0) + ' Terverifikasi di BSC';
+          document.getElementById('stat-crypto-escrows').innerHTML = (s.active_escrows || 0) + ' <span class="text-sm font-normal text-slate-400">Tx</span>';
+          document.getElementById('stat-crypto-escrow-usdt').innerText = (s.total_escrow_usdt || 0) + ' USDT Terkunci';
+          document.getElementById('stat-crypto-released').innerHTML = (s.released_usdt || 0) + ' <span class="text-sm font-normal text-slate-400">USDT</span>';
+          document.getElementById('stat-crypto-points').innerHTML = (s.total_points_issued || 0) + ' <span class="text-sm font-normal text-slate-400">ANV</span>';
+          document.getElementById('stat-crypto-members').innerText = (s.total_loyalty_members || 0) + ' Anggota Aktif';
+        }
+      } catch (err) {
+        console.error('Gagal refresh crypto stats:', err);
+      } finally {
+        if (icon) setTimeout(() => icon.classList.remove('fa-spin'), 600);
+      }
+    }
+
+    async function confirmCheckinAction(bookingRef) {
+      if (!confirm(`Konfirmasi check-in tamu untuk ${bookingRef}? Dana escrow USDT akan dilepaskan (released) ke dompet hotel.`)) return;
+      try {
+        const res = await fetch(`/api/v2/crypto/escrow/${bookingRef}/confirm-checkin`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ verified_by: 'FO-Admin' })
+        });
+        const data = await res.json();
+        if (res.ok && data.status === 'success') {
+          showToast(`Check-in ${bookingRef} sukses! Dana USDT dilepaskan ke hotel.`);
+          setTimeout(() => window.location.reload(), 1200);
+        } else {
+          alert('Gagal konfirmasi check-in: ' + (data.detail || JSON.stringify(data)));
+        }
+      } catch (err) {
+        alert('Terjadi kesalahan jaringan: ' + err.message);
+      }
+    }
+
+    async function cancelEscrowAction(bookingRef) {
+      const reason = prompt(`Batalkan booking & refund escrow untuk ${bookingRef}? Masukkan alasan pembatalan:`, 'Tamu membatalkan reservasi');
+      if (!reason) return;
+      try {
+        const res = await fetch(`/api/v2/crypto/escrow/${bookingRef}/cancel`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reason: reason })
+        });
+        const data = await res.json();
+        if (res.ok && data.status === 'success') {
+          showToast(`Escrow ${bookingRef} berhasil di-refund.`);
+          setTimeout(() => window.location.reload(), 1200);
+        } else {
+          alert('Gagal membatalkan escrow: ' + (data.detail || JSON.stringify(data)));
+        }
+      } catch (err) {
+        alert('Terjadi kesalahan: ' + err.message);
+      }
+    }
+
+    function openVerifyModal(defaultRef = '') {
+      const modal = document.getElementById('crypto-verify-modal');
+      const input = document.getElementById('verify-input-ref');
+      const resultBox = document.getElementById('verify-result-box');
+      if (input && defaultRef) input.value = defaultRef;
+      if (resultBox) {
+        resultBox.classList.add('hidden');
+        resultBox.innerHTML = '';
+      }
+      if (modal) modal.classList.remove('hidden');
+      if (defaultRef) executeVerification();
+    }
+
+    function closeVerifyModal() {
+      const modal = document.getElementById('crypto-verify-modal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function verifyTransactionAction(bookingRef) {
+      openVerifyModal(bookingRef);
+    }
+
+    async function executeVerification() {
+      const ref = document.getElementById('verify-input-ref').value.trim();
+      if (!ref) {
+        alert('Mohon masukkan Booking Reference.');
+        return;
+      }
+      const box = document.getElementById('verify-result-box');
+      box.classList.remove('hidden');
+      box.innerHTML = '<div class="text-slate-400 py-3 text-center"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Memverifikasi bukti kriptografis on-chain...</div>';
+
+      try {
+        const res = await fetch(`/api/v2/security/verify/${ref}`);
+        const data = await res.json();
+        if (res.ok && data.verified) {
+          box.innerHTML = `
+            <div class="p-3 bg-emerald-950/40 border border-emerald-500/40 rounded-lg text-emerald-300 space-y-1.5">
+              <div class="flex items-center space-x-2 font-bold text-sm">
+                <i class="fa-solid fa-circle-check text-emerald-400"></i>
+                <span>TERVERIFIKASI SAH ON-CHAIN</span>
+              </div>
+              <div class="text-[11px] text-slate-300">Data transaksi cocok 100% dan tercatat di blockchain tanpa manipulasi.</div>
+            </div>
+            <div class="mt-2 space-y-1 text-slate-300 text-[11px]">
+              <div><span class="text-slate-500">Booking Ref:</span> <strong class="text-white">${data.booking_ref || data.reference}</strong></div>
+              <div><span class="text-slate-500">Metode Bayar:</span> <span class="px-1.5 py-0.5 rounded bg-slate-800 text-indigo-300 font-bold uppercase">${data.payment_method || 'QRIS / CRYPTO'}</span></div>
+              <div><span class="text-slate-500">Nominal:</span> Rp ${Number(data.amount || 0).toLocaleString('id-ID')}</div>
+              <div><span class="text-slate-500">Tx Hash:</span> <span class="text-amber-300 break-all select-all font-mono">${data.tx_hash}</span></div>
+              <div><span class="text-slate-500">Block Number:</span> #${data.block_number || 'Auto-Mined'}</div>
+              <div><span class="text-slate-500">Waktu Notaris:</span> ${data.timestamp}</div>
+              <div class="pt-2">
+                <a href="${data.bscscan_url}" target="_blank" class="inline-flex items-center px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded text-xs font-semibold transition">
+                  <i class="fa-solid fa-arrow-up-right-from-square mr-1.5"></i>Buka Bukti di BSC Explorer
+                </a>
+              </div>
+            </div>
+          `;
+        } else {
+          box.innerHTML = `
+            <div class="p-3 bg-rose-950/40 border border-rose-500/40 rounded-lg text-rose-300 space-y-1">
+              <div class="font-bold flex items-center"><i class="fa-solid fa-circle-exclamation mr-1.5"></i> Data Belum Ditemukan</div>
+              <div class="text-[11px]">${data.detail || 'Booking belum ter-notarisasi atau referensi salah.'}</div>
+            </div>
+          `;
+        }
+      } catch (err) {
+        box.innerHTML = `<div class="p-3 bg-rose-950/40 border border-rose-500/40 rounded-lg text-rose-300 text-[11px]">Gagal verifikasi: ${err.message}</div>`;
+      }
+    }
+
+    // -------------------------------------------------------------
+    // LIVE MONITORING LOGIC
+    // -------------------------------------------------------------
+    async function fetchLiveLogs(manual = false) {
+      const refreshIcon = document.getElementById('refresh-icon');
+      if (manual && refreshIcon) refreshIcon.classList.add('fa-spin');
+
+      try {
+        const res = await fetch('/api/v1/live-logs');
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        liveLogsData = data;
+
+        // 1. Update KPI stats
+        if (data.stats) {
+          document.getElementById('stat-total-webhooks').innerText = data.stats.total_webhooks || 0;
+          document.getElementById('stat-total-inquiries').innerText = data.stats.total_inquiries || 0;
+          document.getElementById('stat-total-chats').innerText = data.stats.total_chat_messages || 0;
+        }
+
+        // 2. Render guest list
+        renderGuestList();
+
+        // 3. Render terminal logs
+        renderTerminalLogs();
+
+        // 4. Update current selected guest chat if any
+        if (selectedGuestPhone) {
+          loadGuestChat(selectedGuestPhone, false);
+        } else if (data.inquiries && data.inquiries.length > 0 && !selectedGuestPhone) {
+          // Auto select first guest if none selected
+          selectGuest(data.inquiries[0].phone);
+        }
+
+        // 5. Update timestamp
+        const now = new Date();
+        document.getElementById('last-updated-text').innerText = 'Update: ' + now.toLocaleTimeString('id-ID');
+
+        if (manual) showToast('Data monitoring berhasil diperbarui!');
+      } catch (err) {
+        console.error('Fetch live logs error:', err);
+      } finally {
+        if (manual && refreshIcon) refreshIcon.classList.remove('fa-spin');
+      }
+    }
+
+    function toggleAutoRefresh(enabled) {
+      autoRefreshActive = enabled;
+      const indicator = document.getElementById('refresh-indicator');
+      if (enabled) {
+        if (indicator) indicator.classList.remove('hidden');
+        startAutoRefresh();
+        showToast('Auto-refresh aktif (3 detik)');
+      } else {
+        if (indicator) indicator.classList.add('hidden');
+        if (autoRefreshTimer) clearInterval(autoRefreshTimer);
+        showToast('Auto-refresh dimatikan');
+      }
+    }
+
+    function startAutoRefresh() {
+      if (autoRefreshTimer) clearInterval(autoRefreshTimer);
+      autoRefreshTimer = setInterval(() => {
+        if (autoRefreshActive) {
+          if (currentActiveTab === 'monitoring') {
+            fetchLiveLogs(false);
+          } else if (currentActiveTab === 'logger' && currentLoggerFilter !== 'TXT_VIEW') {
+            loadLoggerData(false);
+          }
+        }
+      }, 3000);
+    }
+
+    function setGuestFilter(filter) {
+      currentGuestFilter = filter;
+      document.querySelectorAll('.guest-filter-btn').forEach(btn => {
+        btn.classList.remove('bg-blue-600', 'text-white');
+        btn.classList.add('bg-slate-700', 'text-slate-300');
+      });
+      const activeBtn = document.getElementById('filter-' + filter);
+      if (activeBtn) {
+        activeBtn.classList.remove('bg-slate-700', 'text-slate-300');
+        activeBtn.classList.add('bg-blue-600', 'text-white');
+      }
+      renderGuestList();
+    }
+
+    function filterGuestList() {
+      renderGuestList();
+    }
+
+    function renderGuestList() {
+      const container = document.getElementById('guest-list-container');
+      const search = (document.getElementById('guest-search')?.value || '').toLowerCase().trim();
+      const inquiries = liveLogsData.inquiries || [];
+
+      let filtered = inquiries.filter(inq => {
+        const matchSearch = (inq.phone || '').toLowerCase().includes(search) || 
+                            (inq.display_name || '').toLowerCase().includes(search);
+        if (!matchSearch) return false;
+
+        if (currentGuestFilter === 'draft') return inq.status === 'DRAFT_RECAP_SENT';
+        if (currentGuestFilter === 'chatting') return inq.status !== 'DRAFT_RECAP_SENT';
+        return true;
+      });
+
+      document.getElementById('guest-count-label').innerText = `${filtered.length} calon tamu`;
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="p-8 text-center text-xs text-slate-500">
+            <i class="fa-solid fa-inbox text-2xl mb-2 text-slate-600"></i>
+            <p>Tidak ada percakapan yang cocok.</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = filtered.map(inq => {
+        const isSelected = selectedGuestPhone === inq.phone;
+        const isDraft = inq.status === 'DRAFT_RECAP_SENT';
+        const initial = (inq.display_name || inq.phone || 'T')[0].toUpperCase();
+
+        return `
+          <div onclick="selectGuest('${inq.phone}')" class="p-3 cursor-pointer transition ${isSelected ? 'bg-blue-950/40 border-l-4 border-blue-500' : 'hover:bg-slate-700/40'}">
+            <div class="flex items-center justify-between mb-1">
+              <div class="flex items-center space-x-2.5">
+                <span class="w-7 h-7 rounded-full ${isDraft ? 'bg-amber-600/30 text-amber-300 border border-amber-500/40' : 'bg-blue-600/30 text-blue-300 border border-blue-500/40'} flex items-center justify-center text-xs font-bold">
+                  ${initial}
+                </span>
+                <div>
+                  <h4 class="font-bold text-xs text-white leading-tight truncate max-w-[140px]">${inq.display_name || inq.phone}</h4>
+                  <p class="text-[10px] text-slate-400 font-mono">${inq.phone}</p>
+                </div>
+              </div>
+              <span class="px-1.5 py-0.5 rounded text-[9px] font-semibold ${isDraft ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-blue-500/20 text-blue-300 border border-blue-500/30'}">
+                ${isDraft ? 'DRAFT REKAP' : 'CHAT AKTIF'}
+              </span>
+            </div>
+            ${inq.summary ? `
+              <p class="text-[11px] text-slate-300 truncate mt-1 pl-9 italic opacity-90">${inq.summary.split('\n')[0]}</p>
+            ` : `
+              <p class="text-[11px] text-slate-400 truncate mt-1 pl-9 italic opacity-80">Sedang konsultasi kamar dengan Garda AI...</p>
+            `}
+            <div class="flex justify-end mt-1 text-[10px] text-slate-500 font-mono">
+              ${inq.updated_at ? inq.updated_at.split(' ')[1] : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function selectGuest(phone) {
+      selectedGuestPhone = phone;
+      renderGuestList();
+      loadGuestChat(phone, true);
+    }
+
+    async function loadGuestChat(phone, autoScroll = true) {
+      if (!phone) return;
+      try {
+        const res = await fetch('/api/v1/live-chat/' + encodeURIComponent(phone));
+        if (!res.ok) return;
+        const data = await res.json();
+
+        // Update Header Bar
+        document.getElementById('chat-guest-name').innerText = data.guest_name || data.phone;
+        document.getElementById('chat-guest-phone').innerText = data.phone;
+        document.getElementById('chat-guest-avatar').innerText = (data.guest_name || data.phone || 'T')[0].toUpperCase();
+
+        const badgeContainer = document.getElementById('chat-draft-badge-container');
+        if (data.status === 'DRAFT_RECAP_SENT') {
+          badgeContainer.innerHTML = '<span class="px-2 py-0.5 rounded text-[11px] font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30">🟡 DRAFT REKAP SIAP</span>';
+        } else {
+          badgeContainer.innerHTML = '<span class="px-2 py-0.5 rounded text-[11px] font-semibold bg-blue-500/20 text-blue-300 border border-blue-500/30">🔵 SEDANG CHAT</span>';
+        }
+
+        // Update Draft Recap Banner
+        const recapBanner = document.getElementById('chat-recap-banner');
+        const recapText = document.getElementById('chat-recap-text');
+        if (data.summary) {
+          recapText.innerText = data.summary;
+          recapBanner.classList.remove('hidden');
+        } else {
+          recapBanner.classList.add('hidden');
+        }
+
+        // Enable FO Reply Input
+        const replyInput = document.getElementById('fo-reply-input');
+        const replyBtn = document.getElementById('fo-reply-btn');
+        replyInput.disabled = false;
+        replyBtn.disabled = false;
+        replyInput.placeholder = `Kirim balasan Front Office ke WA ${data.phone}...`;
+
+        // Render Chat Bubbles
+        const chatBox = document.getElementById('mon-chat-bubbles');
+        if (!data.chats || data.chats.length === 0) {
+          chatBox.innerHTML = `
+            <div class="h-full flex flex-col items-center justify-center text-slate-500 text-xs">
+              <i class="fa-regular fa-comments text-3xl mb-2 text-slate-600"></i>
+              <p>Belum ada riwayat pesan untuk nomor ini.</p>
+            </div>
+          `;
+          return;
+        }
+
+        chatBox.innerHTML = data.chats.map(c => {
+          const isUser = c.role === 'user';
+          const isFO = (c.message || '').startsWith('[FO Staff]:');
+          
+          if (isUser) {
+            return `
+              <div class="flex items-start space-x-2">
+                <div class="w-6 h-6 rounded-full bg-slate-700 flex items-center justify-center text-[10px] text-white font-bold flex-shrink-0 mt-0.5">
+                  👤
+                </div>
+                <div class="bg-slate-800 border border-slate-700 p-3 rounded-2xl rounded-tl-none max-w-[80%] text-xs text-slate-100 shadow-sm leading-relaxed">
+                  <div class="text-[10px] text-slate-400 font-semibold mb-1 flex items-center justify-between">
+                    <span>${data.guest_name || 'Tamu'}</span>
+                    <span class="font-mono text-slate-500 ml-2">${c.created_at || ''}</span>
+                  </div>
+                  <div class="whitespace-pre-wrap">${escapeHtml(c.message)}</div>
+                </div>
+              </div>
+            `;
+          } else if (isFO) {
+            const cleanMsg = c.message.replace('[FO Staff]:', '').trim();
+            return `
+              <div class="flex justify-end items-start space-x-2">
+                <div class="bg-emerald-950/80 border border-emerald-700/60 p-3 rounded-2xl rounded-tr-none max-w-[80%] text-xs text-emerald-100 shadow-sm leading-relaxed">
+                  <div class="text-[10px] text-emerald-400 font-semibold mb-1 flex items-center justify-between">
+                    <span class="flex items-center space-x-1">
+                      <i class="fa-solid fa-user-tie"></i>
+                      <span>Front Office Staff</span>
+                    </span>
+                    <span class="font-mono text-emerald-500/80 ml-2">${c.created_at || ''}</span>
+                  </div>
+                  <div class="whitespace-pre-wrap">${escapeHtml(cleanMsg)}</div>
+                </div>
+                <div class="w-6 h-6 rounded-full bg-emerald-600 flex items-center justify-center text-[10px] text-white font-bold flex-shrink-0 mt-0.5">
+                  FO
+                </div>
+              </div>
+            `;
+          } else {
+            // Garda AI Bot
+            return `
+              <div class="flex justify-end items-start space-x-2">
+                <div class="bg-blue-950/70 border border-blue-800/60 p-3 rounded-2xl rounded-tr-none max-w-[80%] text-xs text-blue-100 shadow-sm leading-relaxed">
+                  <div class="text-[10px] text-blue-400 font-semibold mb-1 flex items-center justify-between">
+                    <span class="flex items-center space-x-1">
+                      <i class="fa-solid fa-robot"></i>
+                      <span>Garda AI (Bot)</span>
+                    </span>
+                    <span class="font-mono text-blue-500/80 ml-2">${c.created_at || ''}</span>
+                  </div>
+                  <div class="whitespace-pre-wrap">${escapeHtml(c.message)}</div>
+                </div>
+                <div class="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center text-[10px] text-white font-bold flex-shrink-0 mt-0.5">
+                  🤖
+                </div>
+              </div>
+            `;
+          }
+        }).join('');
+
+        if (autoScroll) {
+          chatBox.scrollTop = chatBox.scrollHeight;
+        }
+      } catch (err) {
+        console.error('Load guest chat error:', err);
+      }
+    }
+
+    async function sendFOMessage(e) {
+      e.preventDefault();
+      if (!selectedGuestPhone) {
+        showToast('Pilih calon tamu terlebih dahulu!');
+        return;
+      }
+
+      const input = document.getElementById('fo-reply-input');
+      const text = input.value.trim();
+      if (!text) return;
+      input.value = '';
+
+      try {
+        const res = await fetch('/api/v1/live-chat/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone: selectedGuestPhone, message: text })
+        });
+        const data = await res.json();
+        if (data.status === 'success') {
+          showToast('Balasan FO berhasil dikirim ke WhatsApp tamu!');
+        } else {
+          showToast('Pesan dicatat di log. (Gateway offline/warning)');
+        }
+        await loadGuestChat(selectedGuestPhone, true);
+        fetchLiveLogs(false);
+      } catch (err) {
+        showToast('Error mengirim: ' + err.message);
+      }
+    }
+
+    function switchMonitoringView(view) {
+      currentMonitoringView = view;
+      const chatBtn = document.getElementById('mon-view-chat-btn');
+      const termBtn = document.getElementById('mon-view-terminal-btn');
+      const chatView = document.getElementById('mon-chat-view');
+      const termView = document.getElementById('mon-terminal-view');
+
+      if (view === 'chat') {
+        chatBtn.className = "px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 text-white flex items-center space-x-1.5 transition";
+        termBtn.className = "px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-700 text-slate-300 hover:text-white flex items-center space-x-1.5 transition";
+        chatView.classList.remove('hidden');
+        termView.classList.add('hidden');
+      } else {
+        termBtn.className = "px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 text-white flex items-center space-x-1.5 transition";
+        chatBtn.className = "px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-700 text-slate-300 hover:text-white flex items-center space-x-1.5 transition";
+        termView.classList.remove('hidden');
+        chatView.classList.add('hidden');
+        renderTerminalLogs();
+      }
+    }
+
+    function renderTerminalLogs() {
+      const container = document.getElementById('terminal-output');
+      const filter = (document.getElementById('terminal-filter')?.value || '').toLowerCase().trim();
+      const logs = liveLogsData.logs || [];
+
+      let filtered = logs.filter(l => {
+        if (!filter) return true;
+        return (l.event_type || '').toLowerCase().includes(filter) ||
+               (l.sender_phone || '').toLowerCase().includes(filter) ||
+               (l.sender_name || '').toLowerCase().includes(filter) ||
+               (l.message_content || '').toLowerCase().includes(filter) ||
+               (l.bot_reply || '').toLowerCase().includes(filter);
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = '<div class="text-slate-500 italic">Belum ada log webhook event yang cocok.</div>';
+        return;
+      }
+
+      container.innerHTML = filtered.map(l => {
+        const isReplied = l.status === 'replied' || l.status === 'success';
+        const isIncoming = l.event_type === 'incoming_message';
+        const isFO = l.event_type === 'manual_fo_reply';
+
+        return `
+          <div class="p-2.5 rounded bg-slate-900 border border-slate-800/80 hover:border-slate-700 transition">
+            <div class="flex items-center justify-between text-[11px] mb-1">
+              <div class="flex items-center space-x-2">
+                <span class="text-slate-500">[${l.created_at || 'LIVE'}]</span>
+                <span class="px-1.5 py-0.2 rounded font-bold uppercase text-[10px] ${isIncoming ? 'bg-emerald-500/20 text-emerald-400' : isFO ? 'bg-purple-500/20 text-purple-400' : 'bg-blue-500/20 text-blue-400'}">
+                  ${l.event_type}
+                </span>
+                <span class="text-slate-300 font-bold">${l.sender_name} (${l.sender_phone})</span>
+              </div>
+              <span class="px-1.5 py-0.2 rounded font-mono text-[10px] ${isReplied ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400'}">
+                STATUS: ${l.status}
+              </span>
+            </div>
+            
+            <div class="pl-4 border-l-2 border-slate-700 space-y-1 text-[11px]">
+              <div class="text-slate-300">
+                <span class="text-slate-500">&gt;&gt; INCOMING:</span> ${escapeHtml(l.message_content || '-')}
+              </div>
+              ${l.bot_reply ? `
+                <div class="text-blue-300">
+                  <span class="text-blue-500">&lt;&lt; BOT REPLY:</span> ${escapeHtml(l.bot_reply)}
+                </div>
+              ` : ''}
+            </div>
+
+            ${l.raw_payload ? `
+              <div class="mt-2 pt-1 border-t border-slate-800/60 flex items-center justify-between">
+                <button onclick="togglePayloadDetail(${l.id})" class="text-[10px] text-slate-500 hover:text-slate-300">
+                  <i class="fa-solid fa-code"></i> Payload JSON
+                </button>
+              </div>
+              <pre id="payload-${l.id}" class="hidden mt-2 p-2 rounded bg-black/60 text-[10px] text-slate-400 overflow-x-auto max-h-36">${escapeHtml(JSON.stringify(l.raw_payload, null, 2))}</pre>
+            ` : ''}
+          </div>
+        `;
+      }).join('');
+    }
+
+    function togglePayloadDetail(id) {
+      const el = document.getElementById('payload-' + id);
+      if (el) el.classList.toggle('hidden');
+    }
+
+    function clearTerminalDisplay() {
+      document.getElementById('terminal-output').innerHTML = '<div class="text-slate-500 italic">Terminal dibersihkan oleh Front Office.</div>';
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    // -------------------------------------------------------------
+    // DRAFT RESERVASI FO LOGIC
+    // -------------------------------------------------------------
+    async function loadInquiries() {
+      const container = document.getElementById('inquiries-container');
+      try {
+        const res = await fetch('/api/v1/inquiries');
+        const data = await res.json();
+        if (data.length === 0) {
+          container.innerHTML = '<div class="p-8 text-center text-slate-500 col-span-2 bg-slate-800/40 rounded-xl border border-slate-700">Belum ada draft reservasi masuk. Mulai chat lewat WhatsApp atau Simulator!</div>';
+          return;
+        }
+
+        container.innerHTML = data.map(inq => `
+          <div class="bg-slate-800 border border-slate-700 rounded-xl p-5 shadow-sm">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center space-x-2">
+                <span class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-sm font-bold text-white">
+                  ${(inq.guest_name || inq.display_name || 'T')[0].toUpperCase()}
+                </span>
+                <div>
+                  <h4 class="font-bold text-sm text-white">${inq.guest_name || inq.display_name || inq.phone}</h4>
+                  <p class="text-xs text-slate-400 font-mono">${inq.phone}</p>
+                </div>
+              </div>
+              <span class="px-2.5 py-1 rounded text-[11px] font-semibold ${inq.status === 'DRAFT_RECAP_SENT' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-blue-500/20 text-blue-300 border border-blue-500/30'}">
+                ${inq.status === 'DRAFT_RECAP_SENT' ? '🟡 DRAFT REKAP SIAP' : '🔵 SEDANG INTERAKSI'}
+              </span>
+            </div>
+
+            ${inq.summary_text ? `
+              <div class="bg-slate-900 p-3 rounded-lg text-xs font-mono text-slate-300 whitespace-pre-wrap mb-3 border border-slate-700/60 max-h-48 overflow-y-auto">
+                ${escapeHtml(inq.summary_text)}
+              </div>
+            ` : `
+              <p class="text-xs text-slate-400 italic mb-3">Tamu masih dalam proses melengkapi informasi reservasi bersama Garda AI.</p>
+            `}
+
+            <div class="flex items-center justify-between pt-2 border-t border-slate-700 text-xs text-slate-400">
+              <span>Update: ${new Date(inq.updated_at).toLocaleTimeString('id-ID')}</span>
+              <button onclick="switchTab('monitoring'); selectGuest('${inq.phone}');" class="text-blue-400 hover:text-blue-300 font-medium">
+                Lihat di Live Monitor &rarr;
+              </button>
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        container.innerHTML = '<div class="p-8 text-center text-red-400 col-span-2">Gagal memuat data: ' + err.message + '</div>';
+      }
+    }
+
+    async function registerWebhook() {
+      const url = document.getElementById('public_webhook_url').value.trim();
+      if (!url) {
+        alert('Harap masukkan URL publik webhook terlebih dahulu!');
+        return;
+      }
+      try {
+        const res = await fetch('/api/v1/config/register-webhook', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ webhook_url: url })
+        });
+        const data = await res.json();
+        if (res.ok && data.status === 'success') {
+          showToast('✅ Webhook berhasil didaftarkan ke WA Gateway!');
+        } else {
+          alert('Gagal mendaftarkan webhook: ' + (data.detail || JSON.stringify(data)));
+        }
+      } catch (err) {
+        alert('Error: ' + err.message);
+      }
+    }
+
+    // -------------------------------------------------------------
+    // SIMULATOR PERCAKAPAN LOGIC
+    // -------------------------------------------------------------
+    let simPhone = '628999' + Math.floor(100000 + Math.random() * 900000);
+    function resetSimulator() {
+      simPhone = '628999' + Math.floor(100000 + Math.random() * 900000);
+      document.getElementById('chat-messages').innerHTML = `
+        <div class="flex items-start space-x-2">
+          <div class="bg-slate-700 p-3 rounded-2xl rounded-tl-none max-w-[85%] text-xs text-slate-200 leading-relaxed">
+            Halo! Saya <b>Garda</b>, asisten reservasi virtual di {{ hotel_name }}. Ada yang bisa saya bantu terkait ketersediaan kamar, tipe bed, atau harga hari ini? 😊
+          </div>
+        </div>
+      `;
+      showToast('Sesi simulator telah di-reset.');
+    }
+
+    function changeSimPhone() {
+      const newPhone = prompt('Masukkan nomor WhatsApp tujuan (contoh: 6281805040354):', simPhone);
+      if (newPhone && newPhone.trim()) {
+        simPhone = newPhone.trim();
+        const lbl = document.getElementById('sim-phone-label');
+        if (lbl) lbl.innerText = simPhone;
+        showToast('Nomor WhatsApp simulasi diganti ke: ' + simPhone);
+      }
+    }
+
+    async function sendSimulatorMessage(e) {
+      e.preventDefault();
+      const inp = document.getElementById('sim-input');
+      const text = inp.value.trim();
+      if (!text) return;
+      inp.value = '';
+
+      const forwardWa = document.getElementById('sim-forward-wa')?.checked || false;
+
+      const box = document.getElementById('chat-messages');
+      box.innerHTML += `
+        <div class="flex justify-end">
+          <div class="bg-blue-600 text-white p-3 rounded-2xl rounded-tr-none max-w-[85%] text-xs leading-relaxed">
+            ${escapeHtml(text)}
+          </div>
+        </div>
+      `;
+      box.scrollTop = box.scrollHeight;
+
+      // Loading bubble
+      const loadId = 'load-' + Date.now();
+      box.innerHTML += `
+        <div id="${loadId}" class="flex items-start space-x-2">
+          <div class="bg-slate-700 text-slate-300 p-3 rounded-2xl rounded-tl-none text-xs flex items-center space-x-1.5">
+            <span class="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce"></span>
+            <span class="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce delay-100"></span>
+            <span class="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce delay-200"></span>
+          </div>
+        </div>
+      `;
+      box.scrollTop = box.scrollHeight;
+
+      try {
+        const res = await fetch('/api/v1/test-chat', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ phone: simPhone, message: text, send_to_wa: forwardWa })
+        });
+        const data = await res.json();
+        document.getElementById(loadId)?.remove();
+
+        box.innerHTML += `
+          <div class="flex items-start space-x-2">
+            <div class="bg-slate-700 p-3 rounded-2xl rounded-tl-none max-w-[85%] text-xs text-slate-200 leading-relaxed whitespace-pre-wrap">
+              ${escapeHtml(data.garda_reply)}
+            </div>
+          </div>
+        `;
+        box.scrollTop = box.scrollHeight;
+
+        if (data.sent_to_wa) {
+          showToast('Balasan Garda juga dikirim ke WhatsApp ' + simPhone);
+        }
+
+        // Auto trigger background sync if live monitoring is open
+        if (autoRefreshActive) {
+          setTimeout(() => fetchLiveLogs(false), 500);
+        }
+      } catch (err) {
+        document.getElementById(loadId)?.remove();
+        box.innerHTML += `
+          <div class="text-xs text-red-400 p-2">Error: ${err.message}</div>
+        `;
+      }
+    }
+
+    // -------------------------------------------------------------
+    // SCHEMA INSPECTOR VIEWER
+    // -------------------------------------------------------------
+    let allSchemaTables = [];
+
+    async function loadSchemaTablesViewer() {
+      const icon = document.getElementById('schema-load-icon');
+      if (icon) icon.classList.add('fa-spin');
+      const container = document.getElementById('schema-viewer-container');
+      const listEl = document.getElementById('schema-tables-list');
+      const badgesEl = document.getElementById('schema-category-badges');
+
+      try {
+        const res = await fetch('/api/v1/tenant/schema-tables');
+        if (!res.ok) throw new Error('Gagal memuat schema tables: ' + res.status);
+        const data = await res.json();
+        allSchemaTables = data.tables || [];
+
+        // Render category badges
+        if (data.categories) {
+          badgesEl.innerHTML = Object.entries(data.categories).map(([k, v]) => `
+            <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-mono">
+              ${k}: <strong class="text-blue-400">${v}</strong>
+            </span>
+          `).join('');
+        }
+
+        renderSchemaTables(allSchemaTables);
+        container.classList.remove('hidden');
+        showToast('Berhasil memuat ' + allSchemaTables.length + ' tabel skema!');
+      } catch (err) {
+        showToast('Error: ' + err.message);
+      } finally {
+        if (icon) icon.classList.remove('fa-spin');
+      }
+    }
+
+    function renderSchemaTables(tables) {
+      const listEl = document.getElementById('schema-tables-list');
+      if (!listEl) return;
+      if (tables.length === 0) {
+        listEl.innerHTML = '<div class="text-slate-500 py-2">Tidak ada tabel yang cocok.</div>';
+        return;
+      }
+
+      listEl.innerHTML = `
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+          ${tables.map(t => {
+            let color = 'text-slate-300';
+            if (t.startsWith('hotel_')) color = 'text-blue-400 font-semibold';
+            else if (t.startsWith('crm_')) color = 'text-amber-400';
+            else if (t.startsWith('user') || t.startsWith('role')) color = 'text-emerald-400';
+            return `<div class="p-1.5 bg-slate-800/80 rounded border border-slate-700/50 truncate hover:border-slate-500 transition cursor-default ${color}" title="${t}">
+              <i class="fa-solid fa-table text-[10px] mr-1.5 text-slate-500"></i>${t}
+            </div>`;
+          }).join('')}
+        </div>
+      `;
+    }
+
+    function filterSchemaTables() {
+      const query = (document.getElementById('schema-table-search')?.value || '').toLowerCase().trim();
+      if (!query) {
+        renderSchemaTables(allSchemaTables);
+        return;
+      }
+      const filtered = allSchemaTables.filter(t => t.toLowerCase().includes(query));
+      renderSchemaTables(filtered);
+    }
+
+    // -------------------------------------------------------------
+    // LOGGER TRANSAKSI WA & TRIPAY (.TXT AUDIT TRAIL) LOGIC
+    // -------------------------------------------------------------
+    let currentLoggerFilter = 'ALL';
+    let loggerSearchQuery = '';
+    let loggerDataCache = { items: [], stats: {} };
+
+    async function loadLoggerData(manual = false) {
+      const spin = document.getElementById('logger-refresh-spin');
+      if (manual && spin) spin.classList.add('fa-spin');
+
+      try {
+        const url = `/api/v1/logs/activity?limit=150&filter_type=${currentLoggerFilter}&search=${encodeURIComponent(loggerSearchQuery)}`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        loggerDataCache = data;
+
+        // Render KPI
+        if (data.stats) {
+          const inboundEl = document.getElementById('logger-stat-inbound');
+          const outboundEl = document.getElementById('logger-stat-outbound');
+          const tripayEl = document.getElementById('logger-stat-tripay');
+          const tripayPaidEl = document.getElementById('logger-stat-tripay-paid');
+          const errorsEl = document.getElementById('logger-stat-errors');
+          const errorsBadgeEl = document.getElementById('logger-stat-errors-badge');
+          const errCountEl = document.getElementById('logger-badge-err-count');
+
+          if (inboundEl) inboundEl.innerText = (data.stats.total_inbound || 0).toLocaleString();
+          if (outboundEl) outboundEl.innerText = (data.stats.total_outbound || 0).toLocaleString();
+          if (tripayEl) tripayEl.innerText = (data.stats.total_tripay || 0).toLocaleString();
+          if (tripayPaidEl) tripayPaidEl.innerText = (data.stats.total_tripay_paid || 0).toLocaleString();
+
+          const totalErr = data.stats.total_errors || 0;
+          if (errorsEl) errorsEl.innerText = totalErr.toLocaleString();
+          if (errCountEl) errCountEl.innerText = totalErr.toLocaleString();
+          if (errorsBadgeEl) {
+            if (totalErr > 0) {
+              errorsBadgeEl.className = "px-1.5 py-0.5 rounded text-[10px] font-semibold bg-rose-500/20 text-rose-400 border border-rose-500/30";
+              errorsBadgeEl.innerHTML = `<span id="logger-stat-errors">${totalErr}</span> error terdeteksi`;
+            } else {
+              errorsBadgeEl.className = "px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/20 text-emerald-400";
+              errorsBadgeEl.innerHTML = `<span id="logger-stat-errors">0</span> error terdeteksi`;
+            }
+          }
+        }
+
+        renderLoggerTable(data.items || []);
+        if (manual) showToast('Data logger transaksi berhasil diperbarui!');
+      } catch (err) {
+        console.error('Error load logger data:', err);
+        if (manual) showToast('Gagal memuat data logger: ' + err.message);
+      } finally {
+        if (manual && spin) spin.classList.remove('fa-spin');
+      }
+    }
+
+    function renderLoggerTable(items) {
+      const tbody = document.getElementById('logger-table-body');
+      if (!tbody) return;
+
+      if (!items || items.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6" class="py-12 text-center text-slate-500">
+              <i class="fa-solid fa-file-lines text-2xl text-slate-600 mb-2 block"></i>
+              Tidak ada data transaksi atau pesan yang cocok dengan filter.
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = items.map(item => {
+        let badgeHtml = '';
+        if (item.category === 'WA_INBOUND') {
+          badgeHtml = `<span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 whitespace-nowrap"><i class="fa-solid fa-arrow-down-left mr-1"></i> WA TERIMA</span>`;
+        } else if (item.category === 'WA_OUTBOUND') {
+          badgeHtml = `<span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-blue-500/20 text-blue-400 border border-blue-500/30 whitespace-nowrap"><i class="fa-solid fa-arrow-up-right mr-1"></i> WA KIRIM</span>`;
+        } else if (item.category === 'TRIPAY') {
+          if (item.status === 'PAID') {
+            badgeHtml = `<span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 whitespace-nowrap"><i class="fa-solid fa-circle-check mr-1"></i> TRIPAY LUNAS</span>`;
+          } else {
+            badgeHtml = `<span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-amber-500/20 text-amber-400 border border-amber-500/30 whitespace-nowrap"><i class="fa-solid fa-clock mr-1"></i> TRIPAY PENDING</span>`;
+          }
+        } else if (item.category === 'ERROR' || item.type === 'ERROR' || item.type === 'WARNING') {
+          if (item.type === 'WARNING') {
+            badgeHtml = `<span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-amber-500/20 text-amber-400 border border-amber-500/30 whitespace-nowrap"><i class="fa-solid fa-triangle-exclamation mr-1"></i> ${item.badge_label || 'PERINGATAN'}</span>`;
+          } else {
+            badgeHtml = `<span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-rose-500/20 text-rose-400 border border-rose-500/30 whitespace-nowrap"><i class="fa-solid fa-circle-xmark mr-1"></i> ${item.badge_label || 'ERROR SISTEM'}</span>`;
+          }
+        } else {
+          badgeHtml = `<span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-700 text-slate-300 border border-slate-600 whitespace-nowrap">${item.category || 'EVENT'}</span>`;
+        }
+
+        let actionHtml = '';
+        if (item.category === 'TRIPAY' && item.status !== 'PAID') {
+          const simUrl = `/api/v1/payment/simulate-pay/${item.reference}`;
+          actionHtml = `
+            <a href="${simUrl}" target="_blank" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-[11px] font-semibold inline-flex items-center space-x-1 transition shadow-sm" title="Simulasi pelunasan instan 1-klik">
+              <i class="fa-solid fa-bolt"></i>
+              <span>Simulasi Lunas</span>
+            </a>
+          `;
+        } else {
+          actionHtml = `
+            <button onclick="navigator.clipboard.writeText('${item.phone}'); showToast('Nomor / Ref disalin!');" class="p-1.5 text-slate-400 hover:text-white transition" title="Salin nomor / ref">
+              <i class="fa-regular fa-copy"></i>
+            </button>
+          `;
+        }
+
+        // Preview pesan
+        const cleanMsg = (item.message || '').replace(/"/g, '&quot;');
+        const shortMsg = cleanMsg.length > 150 ? cleanMsg.substring(0, 147) + '...' : cleanMsg;
+
+        return `
+          <tr class="hover:bg-slate-750/50 transition">
+            <td class="py-3 px-4 font-mono text-[11px] text-slate-400 whitespace-nowrap">
+              ${item.created_at}
+            </td>
+            <td class="py-3 px-4">
+              ${badgeHtml}
+            </td>
+            <td class="py-3 px-4 whitespace-nowrap">
+              <div class="font-bold text-white font-mono text-xs flex items-center space-x-1.5">
+                <span>${item.phone}</span>
+                <button onclick="navigator.clipboard.writeText('${item.phone}'); showToast('Nomor disalin!');" class="text-slate-500 hover:text-slate-300 transition text-[10px]" title="Salin">
+                  <i class="fa-regular fa-copy"></i>
+                </button>
+              </div>
+              <div class="text-[11px] text-slate-400">${item.sender_or_target}</div>
+            </td>
+            <td class="py-3 px-4 text-xs text-slate-300 leading-relaxed max-w-md">
+              <div class="break-words">${shortMsg}</div>
+              ${item.amount ? `<div class="font-bold text-amber-400 font-mono text-xs mt-0.5">Tagihan: ${item.amount_formatted}</div>` : ''}
+            </td>
+            <td class="py-3 px-4 whitespace-nowrap">
+              <span class="inline-block px-2 py-0.5 rounded text-[10px] font-semibold border ${item.status_badge}">
+                ${item.status}
+              </span>
+            </td>
+            <td class="py-3 px-4 text-right whitespace-nowrap">
+              ${actionHtml}
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function setLoggerFilter(filterType) {
+      currentLoggerFilter = filterType;
+      document.querySelectorAll('.logger-filter-btn').forEach(btn => {
+        btn.classList.remove('bg-blue-600', 'text-white');
+        btn.classList.add('bg-slate-900', 'text-slate-300');
+      });
+
+      const activeBtn = document.getElementById('filter-btn-' + filterType);
+      if (activeBtn) {
+        activeBtn.classList.remove('bg-slate-900', 'text-slate-300');
+        activeBtn.classList.add('bg-blue-600', 'text-white');
+      }
+
+      const tableWrapper = document.getElementById('logger-table-wrapper');
+      const txtWrapper = document.getElementById('logger-txt-wrapper');
+
+      if (filterType === 'TXT_VIEW') {
+        if (tableWrapper) tableWrapper.classList.add('hidden');
+        if (txtWrapper) txtWrapper.classList.remove('hidden');
+        refreshRawTxtContent();
+      } else {
+        if (txtWrapper) txtWrapper.classList.add('hidden');
+        if (tableWrapper) tableWrapper.classList.remove('hidden');
+        loadLoggerData(false);
+      }
+    }
+
+    let loggerSearchTimeout = null;
+    function handleLoggerSearch(e) {
+      clearTimeout(loggerSearchTimeout);
+      loggerSearchQuery = e.target.value;
+      loggerSearchTimeout = setTimeout(() => {
+        loadLoggerData(false);
+      }, 350);
+    }
+
+    async function refreshRawTxtContent() {
+      const pre = document.getElementById('logger-raw-pre');
+      if (pre) pre.innerText = 'Memuat isi berkas activity_logger.txt...';
+      try {
+        const res = await fetch('/api/v1/logs/raw-txt');
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const text = await res.text();
+        if (pre) pre.innerText = text;
+      } catch (err) {
+        if (pre) pre.innerText = 'Gagal memuat log txt: ' + err.message;
+      }
+    }
+
+    function copyRawTxtContent() {
+      const pre = document.getElementById('logger-raw-pre');
+      if (pre && pre.innerText) {
+        navigator.clipboard.writeText(pre.innerText);
+        showToast('Seluruh teks log berhasil disalin ke clipboard!');
+      }
+    }
+
+    // Auto start on page load
+    window.addEventListener('DOMContentLoaded', () => {
+      fetchLiveLogs(false);
+      startAutoRefresh();
+    });
+  </script>
+</body>
+</html>
