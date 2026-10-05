@@ -115,6 +115,18 @@ class Settings(BaseSettings):
     EXCHANGE_RATE_USDT_IDR: int = 16000
     LOYALTY_REWARD_PERCENT: int = 5
 
+    @property
+    def CONTRACT_REGISTRY_ADDRESS(self) -> str:
+        return self.SECUREPAY_REGISTRY_ADDRESS
+
+    @property
+    def CONTRACT_ESCROW_ADDRESS(self) -> str:
+        return self.HOTEL_ESCROW_ADDRESS
+
+    @property
+    def CONTRACT_LOYALTY_TOKEN_ADDRESS(self) -> str:
+        return self.LOYALTY_TOKEN_ADDRESS
+
     def __init__(self, **values):
         super().__init__(**values)
         # Prioritaskan nilai eksplisit dari .env lokal jika ada
