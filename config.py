@@ -106,11 +106,11 @@ class Settings(BaseSettings):
     BSC_RPC_URL: str = "https://data-seed-prebsc-1-s1.binance.org:8545/"
     BSC_CHAIN_ID: int = 97
     BSC_EXPLORER_URL: str = "https://testnet.bscscan.com"
-    HOTEL_ESCROW_ADDRESS: str = "0x9A67b8E52fE338c2B5C3524b07AeaE301F25D94C"
-    SECUREPAY_REGISTRY_ADDRESS: str = "0x3F61962F741C524fF9B2e2d09D439A3C2f3b9248"
-    LOYALTY_TOKEN_ADDRESS: str = "0x1C281907727c9DcA3e85a0c9603D51d5B7281D92"
-    USDT_TOKEN_ADDRESS: str = "0x337610d27c682E347C9cD60813747775013096d1"
-    HOTEL_WALLET_ADDRESS: str = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8"
+    HOTEL_ESCROW_ADDRESS: str = "0x337610d27c682E347C9cD60BD4b3b107C9d34dDd"
+    SECUREPAY_REGISTRY_ADDRESS: str = "0xca11bde05977b3631167028862be2a173976ca11"
+    LOYALTY_TOKEN_ADDRESS: str = "0x84b9b910527ad5c03a9ca831909e21e236ea7b06"
+    USDT_TOKEN_ADDRESS: str = "0x337610d27c682E347C9cD60BD4b3b107C9d34dDd"
+    HOTEL_WALLET_ADDRESS: str = "0x036EAe4133c72d7DA3480b9F35f84577daaC5644"
     HOTEL_WALLET_PRIVATE_KEY: str = "0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d"
     EXCHANGE_RATE_USDT_IDR: int = 16000
     LOYALTY_REWARD_PERCENT: int = 5
@@ -139,6 +139,14 @@ class Settings(BaseSettings):
                     self.HOTEL_NAME = env_vals["HOTEL_NAME"]
                 if env_vals.get("HOTEL_LEGAL_NAME"):
                     self.HOTEL_LEGAL_NAME = env_vals["HOTEL_LEGAL_NAME"]
+                if env_vals.get("HOTEL_WALLET_ADDRESS"):
+                    self.HOTEL_WALLET_ADDRESS = env_vals["HOTEL_WALLET_ADDRESS"]
+                if env_vals.get("HOTEL_ESCROW_ADDRESS"):
+                    self.HOTEL_ESCROW_ADDRESS = env_vals["HOTEL_ESCROW_ADDRESS"]
+                if env_vals.get("SECUREPAY_REGISTRY_ADDRESS"):
+                    self.SECUREPAY_REGISTRY_ADDRESS = env_vals["SECUREPAY_REGISTRY_ADDRESS"]
+                if env_vals.get("LOYALTY_TOKEN_ADDRESS"):
+                    self.LOYALTY_TOKEN_ADDRESS = env_vals["LOYALTY_TOKEN_ADDRESS"]
             except Exception:
                 pass
 
