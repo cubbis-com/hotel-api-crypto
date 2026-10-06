@@ -523,9 +523,11 @@ class CryptoSecurePayService:
         total_onchain = db.query(OnChainAuditRecord).count()
         verified_onchain = db.query(OnChainAuditRecord).filter(OnChainAuditRecord.verified == True).count()
         
-        total_loyalty_points = db.query(LoyaltyAccount.balance).all()
-        sum_points = sum(p[0] for p in total_loyalty_points) if total_loyalty_points else 0
-        total_members = db.query(LoyaltyAccount).count()
+        escrow_amounts = db.query(CryptoEscrow.amount_usdt).all()
+        total_escrow_usdt = round(sum(e[0] for e in escrow_amounts), 2) if escrow_amounts else 0.0
+
+        released_escrows = db.query(CryptoEscrow.amount_usdt).filter(CryptoEscrow.status == "CONFIRMED").all()
+        released_usdt = round(sum(e[0] for e in released_escrows), 2) if released_escrows else 0.0
 
         return {
             "qris_total": total_qris_tx,
@@ -536,6 +538,14 @@ class CryptoSecurePayService:
             "onchain_records_verified": verified_onchain,
             "loyalty_points_total": sum_points,
             "loyalty_members_total": total_members,
+            # Keys yang dipanggil templates/dashboard.html & JS refreshCryptoStats
+            "total_onchain_records": total_onchain,
+            "verified_records": verified_onchain,
+            "active_escrows": funded_escrows or total_escrows,
+            "total_escrow_usdt": total_escrow_usdt,
+            "released_usdt": released_usdt,
+            "total_points_issued": sum_points,
+            "total_loyalty_members": total_members,
             "network": "BSC Testnet",
             "chain_id": settings.BSC_CHAIN_ID,
             "contracts": {

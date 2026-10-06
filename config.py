@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = "production"
     PORT: int = 5001
     HOST: str = "0.0.0.0"
-    APP_URL: str = "https://wa-api-hotel.up.railway.app"
+    APP_URL: str = "https://hotel-api-crypto-production.up.railway.app"
     CORS_ORIGINS: str = "*"
 
     # --------------------------------------------------------------------------

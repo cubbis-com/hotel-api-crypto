@@ -655,7 +655,7 @@
                     </td>
                     <td class="py-3 px-3">
                       <div class="text-slate-300 font-sans">{{ esc.guest_phone }}</div>
-                      <div class="text-[10px] text-slate-400 truncate max-w-[120px]">{{ esc.guest_wallet_address or 'Auto Escrow Vault' }}</div>
+                      <div class="text-[10px] text-slate-400 truncate max-w-[120px]">{{ esc.guest_wallet or esc.guest_wallet_address or 'Auto Escrow Vault' }}</div>
                     </td>
                     <td class="py-3 px-3">
                       <div class="font-bold text-amber-400">{{ esc.amount_usdt }} USDT</div>

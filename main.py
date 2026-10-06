@@ -302,6 +302,19 @@ async def notify_guest_payment_success(
     # 2. Kirim pesan ke WhatsApp tamu
     await WhatsAppService.send_message(target_phone, msg)
 
+@app.get("/api/v1/payment/tripay-callback")
+def get_tripay_callback_status():
+    """Endpoint pengecekan status (health check) callback TriPay Payment Gateway."""
+    return {
+        "status": "online",
+        "service": "hotel-api-crypto",
+        "endpoint": "/api/v1/payment/tripay-callback",
+        "method": "POST",
+        "callback_url": settings.tripay_callback_url,
+        "merchant_code": settings.TRIPAY_MERCHANT_CODE,
+        "message": "TriPay callback webhook endpoint is active and listening for POST events."
+    }
+
 @app.post("/api/v1/payment/tripay-callback")
 async def tripay_webhook_callback(
     request: Request,
@@ -313,7 +326,7 @@ async def tripay_webhook_callback(
     """
     Endpoint resmi penerima notifikasi webhook callback dari TriPay Payment Gateway.
     Menerima notifikasi perubahan status transaksi (PAID, EXPIRED, FAILED, REFUND).
-    URL: https://wa-api-hotel.up.railway.app/api/v1/payment/tripay-callback
+    URL: https://hotel-api-crypto-production.up.railway.app/api/v1/payment/tripay-callback
     """
     raw_body = await request.body()
 
@@ -459,24 +472,28 @@ async def tripay_webhook_callback(
             )
 
             # 🆕 ON-CHAIN HASH NOTARIZATION (SecurePayRegistry.sol)
-            background_tasks.add_task(
-                CryptoSecurePayService.record_onchain_transaction,
-                db=db,
-                reference=reference,
-                booking_ref=merchant_ref or reference,
-                payment_method=payment_method,
-                amount=float(total_amount),
-                currency="IDR"
-            )
+            try:
+                await CryptoSecurePayService.record_onchain_transaction(
+                    db=db,
+                    reference=reference,
+                    booking_ref=merchant_ref or reference,
+                    payment_method=payment_method,
+                    amount=float(total_amount),
+                    currency="IDR"
+                )
+            except Exception as e_notary:
+                logger.warning(f"[Tripay Webhook] Gagal notarisasi on-chain: {e_notary}")
 
             # 🆕 LOYALTY REWARD POINTS (LoyaltyToken.sol - 5% ANV)
-            background_tasks.add_task(
-                CryptoSecurePayService.award_loyalty_points,
-                db=db,
-                phone=phone_to_notify,
-                booking_ref=merchant_ref or reference,
-                amount_idr=total_amount
-            )
+            try:
+                CryptoSecurePayService.award_loyalty_points(
+                    db=db,
+                    phone=phone_to_notify,
+                    booking_ref=merchant_ref or reference,
+                    amount_idr=total_amount
+                )
+            except Exception as e_loyalty:
+                logger.warning(f"[Tripay Webhook] Gagal cetak poin loyalitas: {e_loyalty}")
 
         try:
             ActivityLogger.log_tripay_callback(
@@ -657,6 +674,26 @@ async def simulate_pay_endpoint(
             reservation_no=reservation_no,
             room_number=room_number
         )
+
+    # 5. Notarisasi on-chain (SecurePayRegistry.sol) & Award Loyalitas (ANV Token)
+    try:
+        await CryptoSecurePayService.record_onchain_transaction(
+            db=db,
+            reference=tripay_ref,
+            booking_ref=merchant_ref or tripay_ref,
+            payment_method="QRIS Sandbox (Simulasi)",
+            amount=float(total_amount),
+            currency="IDR"
+        )
+        if phone_to_notify:
+            CryptoSecurePayService.award_loyalty_points(
+                db=db,
+                phone=phone_to_notify,
+                booking_ref=merchant_ref or tripay_ref,
+                amount_idr=total_amount
+            )
+    except Exception as e_crypto:
+        logger.warning(f"Simulate pay crypto notarization warning: {e_crypto}")
 
     try:
         ActivityLogger.log_tripay_simulate(
@@ -1047,6 +1084,8 @@ def is_confirmation_intent(text: str) -> bool:
     t = text.strip().lower()
     patterns = [
         r'^\s*(ya|iya|yep|yes|ok|oke|okay|deal|setuju|lanjut|konfirmasi|betul|benar|siap|cocok|pass|gas|yoi|acc|fix)\b',
+        r'^\s*([ab]|opsi\s*[ab]|pilih\s*[ab]|crypto|usdt|bayar\s*crypto|bayar\s*usdt|qris)\b',
+        r'^\s*[ab]\s*$',
         r'(sudah|udah)\s+(benar|sesuai|betul|oke|ok|pas)',
         r'siap\s+(lanjut|proses|konfirmasi)',
         r'bisa\s+di\s*proses',
@@ -2015,6 +2054,24 @@ async def process_and_reply_wa(phone: str, display_name: str, message_body: str,
                 pass
     finally:
         db.close()
+
+@app.get("/webhook/whatsapp")
+def get_whatsapp_webhook_status():
+    """
+    Endpoint pengecekan status (health check) untuk webhook callback WhatsApp.
+    Memudahkan pengujian langsung via browser atau pemantauan uptime.
+    """
+    return {
+        "status": "online",
+        "service": "hotel-api-crypto",
+        "endpoint": "/webhook/whatsapp",
+        "method": "POST",
+        "webhook_url": settings.public_webhook_url,
+        "instance_id": settings.WA_INSTANCE_ID,
+        "gateway_url": settings.WA_GATEWAY_URL,
+        "supported_events": ["message.received", "message.ack"],
+        "message": "WhatsApp webhook callback endpoint is active and listening for incoming messages."
+    }
 
 @app.post("/webhook/whatsapp")
 async def whatsapp_webhook(request: Request, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
