@@ -529,6 +529,10 @@ class CryptoSecurePayService:
         released_escrows = db.query(CryptoEscrow.amount_usdt).filter(CryptoEscrow.status == "CONFIRMED").all()
         released_usdt = round(sum(e[0] for e in released_escrows), 2) if released_escrows else 0.0
 
+        total_loyalty_points = db.query(LoyaltyAccount.balance).all()
+        sum_points = sum(p[0] for p in total_loyalty_points) if total_loyalty_points else 0
+        total_members = db.query(LoyaltyAccount).count()
+
         return {
             "qris_total": total_qris_tx,
             "qris_paid": paid_qris_tx,
