@@ -1955,25 +1955,57 @@ async def process_and_reply_wa(phone: str, display_name: str, message_body: str,
             phone_number=phone
         )
 
-        # 4. Catat balasan Garda ke riwayat
-        db.add(ChatHistory(phone=phone, role="assistant", message=garda_reply))
+        # 4. Catat balasan Garda ke riwayat (bersihkan sinyal internal agar rapi)
+        clean_garda_reply = _re.sub(r'<<BOOKING_CONFIRMED>>.*?<<END_BOOKING>>', '', garda_reply, flags=_re.DOTALL).strip()
+        db.add(ChatHistory(phone=phone, role="assistant", message=clean_garda_reply))
         
         # 5. Cek apakah Garda sudah menghasilkan REKAPITULASI DRAFT
         if "REKAPITULASI DRAFT RESERVASI" in garda_reply.upper() or "REKAPITULASI" in garda_reply.upper():
             inquiry.status = "DRAFT_RECAP_SENT"
-            inquiry.summary_text = garda_reply
+            inquiry.summary_text = clean_garda_reply
             logger.info(f"Draft reservasi berhasil direkap untuk tamu {phone}")
         
         # 6. Cek apakah Garda menghasilkan sinyal <<BOOKING_CONFIRMED>> (tamu konfirmasi reservasi)
         booking_data = parse_booking_signal(garda_reply)
 
-        # Fallback Cerdas: Jika LLM tidak memunculkan <<BOOKING_CONFIRMED>>, tapi status sebelumnya DRAFT_RECAP_SENT
-        # dan tamu mengirim kata-kata konfirmasi ("ya", "oke", "setuju", dll)
-        if not booking_data and inquiry.status == "DRAFT_RECAP_SENT" and is_confirmation_intent(message_body):
-            logger.info(f"Deteksi konfirmasi dari pesan tamu '{message_body}', mengekstrak data dari draft recap...")
-            booking_data = extract_from_recap(inquiry.summary_text or "")
+        # Fallback Cerdas: Jika LLM tidak memunculkan sinyal, tapi tamu mengirim kata konfirmasi / opsi metode
+        if not booking_data and is_confirmation_intent(message_body):
+            logger.info(f"Deteksi konfirmasi dari pesan tamu '{message_body}', mengekstrak data reservasi...")
+            if inquiry.summary_text:
+                booking_data = extract_from_recap(inquiry.summary_text)
+
+            # Jika summary_text belum ada di sesi ini, cari dari chat rekapitulasi asisten sebelumnya
+            if not booking_data:
+                past_recap_msg = db.query(ChatHistory).filter(
+                    ChatHistory.phone == phone,
+                    ChatHistory.role == "assistant",
+                    ChatHistory.message.contains("REKAPITULASI")
+                ).order_by(ChatHistory.id.desc()).first()
+                if past_recap_msg:
+                    booking_data = extract_from_recap(past_recap_msg.message)
+
+            # Jika masih belum ada, buat booking_data dari data inquiry yang ada
+            if not booking_data:
+                cin = inquiry.checkin_date or (datetime.date.today() + datetime.timedelta(days=1)).strftime("%Y-%m-%d")
+                cout = inquiry.checkout_date or (datetime.date.today() + datetime.timedelta(days=2)).strftime("%Y-%m-%d")
+                nights = inquiry.nights or 1
+                rtype = inquiry.room_type or "STD-FAN"
+                total = int(inquiry.estimated_total or (115000 * nights))
+                name = inquiry.guest_name or inquiry.display_name or "Tamu"
+                is_crypto_req = any(c in message_body.upper() for c in ["B", "CRYPTO", "USDT"])
+                booking_data = {
+                    "NAMA": name,
+                    "KODE_KAMAR": rtype,
+                    "CHECKIN": cin,
+                    "CHECKOUT": cout,
+                    "MALAM": nights,
+                    "DEWASA": inquiry.adults or 1,
+                    "TOTAL": total,
+                    "METODE": "CRYPTO" if is_crypto_req else "QRIS",
+                    "EMAIL": "tamu@agniaguesthouse.com"
+                }
             if booking_data:
-                logger.info(f"Berhasil ekstrak booking data dari recap: {booking_data}")
+                logger.info(f"Berhasil ekstrak booking data dari recap/inquiry: {booking_data}")
 
         if booking_data:
             inquiry.status = "CONFIRMED_BY_GUEST"
@@ -1990,7 +2022,7 @@ async def process_and_reply_wa(phone: str, display_name: str, message_body: str,
             w_log = db.query(WebhookEventLog).filter(WebhookEventLog.id == log_id).first()
             if w_log:
                 w_log.status = "replied"
-                w_log.bot_reply = garda_reply
+                w_log.bot_reply = clean_garda_reply
 
         db.commit()
 

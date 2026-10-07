@@ -600,8 +600,8 @@ class GardaService:
         # 7. Rapikan sisa-sisa asterik ganda
         text = re.sub(r'\*{2,}', r'*', text)
 
-        # 8. Hapus blok sinyal mesin internal <<BOOKING_CONFIRMED>>...<<END_BOOKING>> dari pesan WA
-        text = re.sub(r'<<BOOKING_CONFIRMED>>.*?<<END_BOOKING>>', '', text, flags=re.DOTALL)
+        # 8. Blok sinyal <<BOOKING_CONFIRMED>> dipertahankan di sini agar main.py dapat mengekstrak data reservasi
+        # Blok ini akan dibersihkan oleh main.py sebelum dikirimkan ke chat WhatsApp tamu.
 
         # 9. Ganti emoji terimakasih 🙏 menjadi emoji jabat tangan 🤝
         text = text.replace("🙏", "🤝")

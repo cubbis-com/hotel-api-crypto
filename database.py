@@ -226,8 +226,119 @@ def reset_garda_session(phone: str, db: Session, reason: str = "payment_paid") -
     new_session_id = f"agnia_guesthouse_{clean_p}_v{state.session_version}"
     return new_session_id
 
+def seed_initial_crypto_data():
+    """
+    Memastikan data escrow crypto, notarisasi on-chain, dan akun loyalitas
+    tersedia secara default pada instance database baru / restart di Railway.
+    """
+    db = SessionLocal()
+    try:
+        if db.query(CryptoEscrow).count() == 0:
+            now = datetime.datetime.utcnow()
+            sample_escrows = [
+                CryptoEscrow(
+                    booking_ref="BOOK-CRYPTO-TEST-001",
+                    guest_phone="6281299998888",
+                    guest_wallet="0x71C...345",
+                    hotel_wallet=settings.HOTEL_WALLET_ADDRESS,
+                    amount_usdt=40.62,
+                    amount_idr=650000,
+                    checkin_timestamp=int(now.timestamp()) + 86400,
+                    status="CONFIRMED",
+                    tx_hash_create="0xc7278f5128e87884ee6f57f73229d93c12d24c3e59347a2e7a56661703071929",
+                    tx_hash_release="0x0e09dc36ed8ace3eec6dcb95d03b3de1be82e49fef014f85fb16857b11b8f214",
+                    contract_address=settings.HOTEL_ESCROW_ADDRESS,
+                    expires_at=now + datetime.timedelta(minutes=30),
+                    created_at=now - datetime.timedelta(hours=2)
+                ),
+                CryptoEscrow(
+                    booking_ref="BOOK-METAMASK-TEST-002",
+                    guest_phone="6281299998888",
+                    guest_wallet="0xGuestWallet123",
+                    hotel_wallet=settings.HOTEL_WALLET_ADDRESS,
+                    amount_usdt=46.88,
+                    amount_idr=750000,
+                    checkin_timestamp=int(now.timestamp()) + 86400 * 2,
+                    status="CREATED",
+                    tx_hash_create="0x8a593f24508132158f8974c2d93541d021eefddf639ae24555e7f695cc4048b5",
+                    contract_address=settings.HOTEL_ESCROW_ADDRESS,
+                    expires_at=now + datetime.timedelta(minutes=30),
+                    created_at=now - datetime.timedelta(hours=1)
+                ),
+                CryptoEscrow(
+                    booking_ref="BOOK-METAMASK-TEST-003",
+                    guest_phone="6281299998888",
+                    guest_wallet="0xGuestWallet123",
+                    hotel_wallet=settings.HOTEL_WALLET_ADDRESS,
+                    amount_usdt=46.88,
+                    amount_idr=750000,
+                    checkin_timestamp=int(now.timestamp()) + 86400 * 3,
+                    status="CONFIRMED",
+                    tx_hash_create="0x1b2699e41d3849c2ffd1274c327b4cb9cca282969fb3d150b1aa481abe7df496",
+                    tx_hash_release="0xe0832bfb54fb294255e43e2e89905c801ba29bc68215a434d812d5674456fbcb",
+                    contract_address=settings.HOTEL_ESCROW_ADDRESS,
+                    expires_at=now + datetime.timedelta(minutes=30),
+                    created_at=now - datetime.timedelta(minutes=45)
+                )
+            ]
+            db.add_all(sample_escrows)
+            db.commit()
+
+        if db.query(OnChainAuditRecord).count() == 0:
+            now = datetime.datetime.utcnow()
+            sample_notarizations = [
+                OnChainAuditRecord(
+                    reference="ESCROW-BOOK-CRYPTO-TEST-001",
+                    booking_ref="BOOK-CRYPTO-TEST-001",
+                    payment_method="CRYPTO_USDT",
+                    amount=650000.0,
+                    currency="IDR",
+                    tx_hash="0xc7278f5128e87884ee6f57f73229d93c12d24c3e59347a2e7a56661703071929",
+                    block_number=45129801,
+                    network="BSC Testnet (Chain ID: 97)",
+                    verified=True,
+                    payload_hash="0xc7278f5128e87884ee6f57f73229d93c12d24c3e59347a2e7a56661703071929",
+                    created_at=now - datetime.timedelta(hours=2)
+                ),
+                OnChainAuditRecord(
+                    reference="ESCROW-BOOK-METAMASK-TEST-003",
+                    booking_ref="BOOK-METAMASK-TEST-003",
+                    payment_method="CRYPTO_USDT",
+                    amount=750000.0,
+                    currency="IDR",
+                    tx_hash="0x1b2699e41d3849c2ffd1274c327b4cb9cca282969fb3d150b1aa481abe7df496",
+                    block_number=45129845,
+                    network="BSC Testnet (Chain ID: 97)",
+                    verified=True,
+                    payload_hash="0x1b2699e41d3849c2ffd1274c327b4cb9cca282969fb3d150b1aa481abe7df496",
+                    created_at=now - datetime.timedelta(minutes=45)
+                )
+            ]
+            db.add_all(sample_notarizations)
+            db.commit()
+
+        if db.query(LoyaltyAccount).count() == 0:
+            now = datetime.datetime.utcnow()
+            loyalty_acc = LoyaltyAccount(
+                phone="6281299998888",
+                wallet_address="0x71C...345",
+                total_earned=69,
+                total_redeemed=0,
+                balance=69,
+                tier="None",
+                booking_count=2,
+                created_at=now - datetime.timedelta(hours=2)
+            )
+            db.add(loyalty_acc)
+            db.commit()
+    except Exception as e:
+        db.rollback()
+    finally:
+        db.close()
+
 def init_db():
     Base.metadata.create_all(bind=engine)
+    seed_initial_crypto_data()
 
 def get_db():
     db = SessionLocal()

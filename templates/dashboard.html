@@ -737,7 +737,7 @@
                       <div class="font-bold text-white font-sans">{{ rec.booking_ref }}</div>
                       <div class="text-[10px] text-slate-400 flex items-center space-x-1.5 font-sans">
                         <span class="px-1.5 py-0.2 rounded bg-slate-700 text-slate-300 uppercase text-[9px]">{{ rec.payment_method }}</span>
-                        <span>Rp {{ "{:,.0f}".format(rec.amount_idr) }}</span>
+                        <span>{{ rec.currency or 'IDR' }} {{ "{:,.0f}".format(rec.amount) }}</span>
                       </div>
                     </td>
                     <td class="py-3 px-3">
@@ -749,7 +749,7 @@
                       </div>
                     </td>
                     <td class="py-3 px-3">
-                      {% if rec.verification_status == 'VERIFIED' %}
+                      {% if rec.verified or rec.verification_status == 'VERIFIED' %}
                         <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center w-fit">
                           <i class="fa-solid fa-circle-check text-[8px] mr-1"></i>Blk #{{ rec.block_number or 'Auto' }}
                         </span>
